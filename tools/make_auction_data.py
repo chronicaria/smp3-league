@@ -25,7 +25,8 @@ lots = [{k: v for k, v in dict(id=p['id'], rk=p['rk'], n=p['n'], pos=p['pos'], a
 cfg = dict(
     start='2026-11-20T12:00:00-05:00',   # bids stamped before this are refused; None = demo mode
     close='2026-11-22T23:59:59-05:00',   # Sunday night, Eastern; overrides start + hours
-    hours=48, budget=BUDGET, roster=ROSTER, max=MAX,
+    hours=48, budget=BUDGET, roster=ROSTER, max=None,   # no salary cap per player (Andrew, 11-20); MAX only shapes the demo bids
+   
     tz='-05:00',         # the bid sheet's time zone as a UTC offset (File > Settings in the sheet); -05:00 is US Eastern in winter
     csv='https://docs.google.com/spreadsheets/d/e/2PACX-1vRZzKvD55n_uNnddZ3MKZA39rNNBoQzMfbbNmZY509nTCzCFwDLVdS3z19N9bF2UkJ7iFDUwpYLS3VT/pub?output=csv',   # the form's response sheet, published as CSV
     form=dict(url='https://docs.google.com/forms/d/e/1FAIpQLSfgclHk1wATdaob-Ri4iCqYOt5YPrmRwX-EN8Iwd067kUVSBw/viewform', team='1058264156', player='1685387383', salary='357442458', years='441189916'),   # Google Form and each question's entry id (for prefilled bid links)
