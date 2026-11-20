@@ -59,6 +59,8 @@
   }
   const team = (tid) => T[tid];
   const gpT = (tid) => rec[tid].w + rec[tid].l;
+  const streakTxt = (tid) => { const s = streak(tid), n = +s.slice(1); return n >= 2 ? `${s[0] === 'W' ? 'Won' : 'Lost'} ${n} straight` : ''; };
+  const banners = (t) => (t.banners && t.banners.length ? `<div class="banners">${t.banners.map((y) => `<span style="background:${t.color};border-color:${t.accent}"><b>${esc(y)}</b>Champions</span>`).join('')}</div>` : '');
   const recStr = (tid) => `${rec[tid].w}-${rec[tid].l}`;
   const streak = (tid) => { const r = rec[tid].res; if (!r.length) return '—'; let n = 0; for (let i = r.length - 1; i >= 0 && r[i] === r.at(-1); i--) n++; return r.at(-1) + n; };
   const last10 = (tid) => { const r = rec[tid].res.slice(-10); return `${r.filter((x) => x === 'W').length}-${r.filter((x) => x === 'L').length}`; };
@@ -215,8 +217,23 @@
     const sc = (g) => { const w = g.home.pts > g.away.pts ? g.home : g.away, l = w === g.home ? g.away : g.home; return `${logo(w.tid, 18)}${team(w.tid).abbrev} ${w.pts}, ${team(l.tid).abbrev} ${l.pts}${g.ot ? ` · ${g.ot > 1 ? g.ot : ''}OT` : ''} · Box score`; };
     const others = Object.keys(R).map(Number).filter((x) => x !== n).sort((a, b) => b - a);
     $app.innerHTML = `<article class="card lede story" style="${recapLead(r)}"><div class="gh lede-top"><span class="kick">Game ${n} recap</span><h1>${esc(r.headline)}</h1><p class="dek">${esc(r.dek)}</p></div>
-      <div class="art">${r.games.map((x) => { const g = byGid.get(x.gid); return g ? `<p>${esc(x.text)}</p><a class="slug" href="#game-${g.gid}">${sc(g)}</a>` : ''; }).join('')}</div></article>
+      <div class="art">${r.games.map((x) => { const g = byGid.get(x.gid); return g ? `<p><b class="dateline">${esc(team(g.home.tid).region)}</b> — ${esc(x.text)}</p><a class="slug" href="#game-${g.gid}">${sc(g)}</a>` : ''; }).join('')}</div></article>
       ${others.length ? `<p class="note" style="max-width:760px;margin:0 auto">Earlier recaps: ${others.map((x) => `<a href="#recap-${x}">Game ${x}</a>`).join(' · ')}</p>` : ''}`;
+  }
+  function around() {
+    const out = [], rows = D.games.flatMap(allRows), best = new Map();
+    for (const [r] of rows) best.set(r[0], Math.max(best.get(r[0]) || 0, r[C.pts]));
+    const top = Math.max(...rows.map(([r]) => r[C.pts])), nm = (r) => esc(P.get(r[0]).name);
+    T.map((t) => [t, streak(t.tid)]).filter(([, s]) => +s.slice(1) >= 3).sort((a, b) => +b[1].slice(1) - +a[1].slice(1)).slice(0, 4)
+      .forEach(([t, s]) => out.push([logo(t.tid, 32), `The ${esc(t.name)} have ${s[0] === 'W' ? 'won' : 'lost'} ${s.slice(1)} straight`, `${recStr(t.tid)} · ${ord(order().indexOf(t.tid) + 1)} seed`, `#team-${t.abbrev}`]));
+    const today = D.games.filter((g) => g.day === lastDay).flatMap(allRows).sort((a, b) => b[0][C.pts] - a[0][C.pts]);
+    for (const [r, tid, g] of today) {
+      const reb = r[C.orb] + r[C.drb], dbl = [r[C.pts], reb, r[C.ast], r[C.stl], r[C.blk]].filter((v) => v >= 10).length, vs = `${g.home.tid === tid ? 'vs' : '@'} ${team(g.home.tid === tid ? g.away.tid : g.home.tid).abbrev}`;
+      if (dbl >= 3) out.push([pface(r[0]), `${nm(r)} had a triple-double`, `${line(r)} ${vs}`, `#game-${g.gid}`]);
+      else if (r[C.pts] === top) out.push([pface(r[0]), `${nm(r)} set the league's season high with ${r[C.pts]}`, `${line(r)} ${vs}`, `#game-${g.gid}`]);
+      else if (r[C.pts] >= 25 && r[C.pts] === best.get(r[0]) && stats.get(r[0]).gp >= 5) out.push([pface(r[0]), `${nm(r)} scored a season-high ${r[C.pts]}`, `${line(r)} ${vs}`, `#game-${g.gid}`]);
+    }
+    return out.length ? card('Around the league', out.slice(0, 7).map(([img, a, b, href]) => `<a class="row r-news" href="${href}">${img}<span class="who"><b>${a}</b><span>${b}</span></span><span></span></a>`).join(''), `<span>After Game ${lastDay}</span>`) : '';
   }
   function home() {
     const today = D.games.filter((g) => g.day === lastDay), feat = [...today].sort((a, b) => { const fa = flow(a), fb = flow(b); return (fb.changes + fb.ties * 0.5 - Math.abs(b.home.pts - b.away.pts)) - (fa.changes + fa.ties * 0.5 - Math.abs(a.home.pts - a.away.pts)); })[0];
@@ -224,7 +241,7 @@
     const blk = (s, home, won) => `<div class="gt${home ? ' h' : ''}">${logo(s.tid, 64)}<div class="who"><b>${tname(s.tid)}</b><span>${recStr(s.tid)}</span></div><span class="big ${won ? '' : 'lost'}">${s.pts}</span></div>`;
     const best = allRows(feat).sort((x, y) => gmsc(y[0]) - gmsc(x[0])).slice(0, 3);
     const featured = `<section class="card" style="--away:${team(a.tid).accent};--home:${team(h.tid).accent}"><div class="ch"><h2>Game of the day</h2><a href="#game-${feat.gid}">Full box score</a></div>
-      <a class="gh" href="#game-${feat.gid}" style="display:block"><div class="gh-in" style="--wa:url(${team(a.tid).logo});--wh:url(${team(h.tid).logo})">${blk(a, false, aw)}<div class="ls"><div class="sub">Game ${feat.day}</div></div>${blk(h, true, !aw)}</div></a>
+      <a class="gh" href="#game-${feat.gid}" style="display:block"><div class="gh-in" style="--wa:url(${team(a.tid).logo});--wh:url(${team(h.tid).logo})">${blk(a, false, aw)}<div class="ls"><div class="sub">Game ${feat.day}<br>${esc(team(h.tid).arena)}</div></div>${blk(h, true, !aw)}</div></a>
       <div class="wp" style="border-top:1px solid var(--line)">${wpChart(feat, f, 110)}</div>
       <div class="grid g-3" style="gap:0;border-top:1px solid var(--line)">${best.map(([r, tid]) => `<a class="row r-news" style="border-bottom:0" href="#player-${r[0]}">${face(r[0])}<span class="who"><b>${esc(short(P.get(r[0]).name))}</b><span>${team(tid).abbrev} · ${line(r)}</span></span><span></span></a>`).join('')}</div></section>`;
     const lead3 = CATS.slice(0, 5).map(([lab, ab, fn]) => `<div class="ch" style="height:30px;background:var(--raise)"><h2 style="font-size:10.5px;color:var(--muted)">${lab}</h2></div>${topN(fn, 3).map(([pid, s, v], i) => lrow(pid, s, f1(v), i)).join('')}`).join('');
@@ -232,7 +249,7 @@
       <div class="grid g-main"><div class="stack">${recap()}${featured}
         <div class="grid g-2">${today.filter((g) => g !== feat).map(gameCard).join('')}</div>
         ${teamStatsTable()}</div>
-      <aside class="stack">${standingsMini()}${card('League leaders', lead3, '<a href="#leaders">All leaders</a>')}</aside></div>
+      <aside class="stack">${standingsMini()}${around()}${card('League leaders', lead3, '<a href="#leaders">All leaders</a>')}</aside></div>
       <div style="margin-top:var(--gap)">${injuryCard(null, true)}</div>`;
   }
 
@@ -298,7 +315,7 @@
     const qh = a.q.map((_, i) => (i < 4 ? i + 1 : `OT${i > 4 ? i - 3 : ''}`));
     const ls = `<table><thead><tr><th></th>${qh.map((q) => `<th>${q}</th>`).join('')}<th>T</th></tr></thead><tbody><tr><td class="t">${ta.abbrev}</td>${a.q.map((x) => `<td>${x}</td>`).join('')}<td>${a.pts}</td></tr><tr><td class="t">${th.abbrev}</td>${h.q.map((x) => `<td>${x}</td>`).join('')}<td>${h.pts}</td></tr></tbody></table>`;
     const blk = (s, home, won) => `<div class="gt${home ? ' h' : ''}">${tlink(s.tid, logo(s.tid, 76))}<div class="who"><b>${tlink(s.tid, tname(s.tid))}</b><span>${recStr(s.tid)} · ${home ? 'Home' : 'Away'}</span></div><span class="big ${won ? '' : 'lost'}">${s.pts}</span></div>`;
-    $app.innerHTML = `<div style="--away:${ta.accent};--home:${th.accent}"><section class="card gh" style="margin-bottom:var(--gap)"><div class="gh-in" style="--wa:url(${ta.logo});--wh:url(${th.logo})">${blk(a, false, aw)}<div class="ls">${ls}<div class="sub">Game ${g.day}</div></div>${blk(h, true, !aw)}</div></section>
+    $app.innerHTML = `<div style="--away:${ta.accent};--home:${th.accent}"><section class="card gh" style="margin-bottom:var(--gap)"><div class="gh-in" style="--wa:url(${ta.logo});--wh:url(${th.logo})">${blk(a, false, aw)}<div class="ls">${ls}<div class="sub">Game ${g.day} · ${esc(th.arena)}</div></div>${blk(h, true, !aw)}</div></section>
       <div class="grid g-game"><aside class="stack">${gameLeaders(g)}${gameTeamStats(g, f)}</aside><div class="stack">${wpCard(g, f)}${boxTable(a)}${boxTable(h)}</div></div></div>`;
     wireWp(g, f);
   }
@@ -341,7 +358,7 @@
     const next = D.schedule.filter((s) => s.home === tid || s.away === tid).slice(0, 5).map((s) => { const hm = s.home === tid, opp = hm ? s.away : s.home; return `<a class="row r-sched" href="#team-${team(opp).abbrev}"><span class="d">Game ${s.day}</span>${logo(opp, 20)}<span>${hm ? 'vs' : '@'} ${esc(team(opp).name)}</span><span class="res muted">${recStr(opp)}</span></a>`; }).join('');
     const tl = (lab, k, f = (s) => per(s, k)) => { const b = roster.filter(([, s]) => s && s.gp >= 3).sort((x, y) => f(y[1]) - f(x[1]))[0]; return b ? `<a class="row r-news" href="#player-${b[0].pid}">${face(b[0].pid)}<span class="who"><b>${esc(b[0].name)}</b><span>${lab}</span></span><span class="v">${f1(f(b[1]))}</span></a>` : ''; };
     const nm = (v, lab, rk) => `<div><b>${v}</b><span>${lab}</span>${rk ? `<small>${ord(rk)}</small>` : ''}</div>`;
-    $app.innerHTML = `<section class="card hd" style="--c:${t.accent};--wm:url(${t.logo})">${logo(tid, 96)}<div><h1>${tname(tid)}</h1><div class="sub"><span>${recStr(tid)} · ${ord(o.indexOf(tid) + 1)} of 10 · ${gb(tid, o[0])} GB</span><span class="form">${r.res.slice(-10).map((x) => `<i class="${x}">${x}</i>`).join('')}</span></div></div>
+    $app.innerHTML = `<section class="card hd" style="--c:${t.accent};--wm:url(${t.logo})">${logo(tid, 96)}<div><h1>${tname(tid)}</h1><div class="sub"><span>${recStr(tid)} · ${ord(o.indexOf(tid) + 1)} of 10 · ${gb(tid, o[0])} GB</span><span class="form">${r.res.slice(-10).map((x) => `<i class="${x}">${x}</i>`).join('')}</span>${streakTxt(tid) ? `<span>${streakTxt(tid)}</span>` : ''}</div><div class="sub"><span>${esc(t.owner)}, owner and coach</span><span>Home: ${esc(t.arena)} (${r.hw}-${r.hl})</span></div>${banners(t)}</div>
       <div class="nums">${nm(f1(r.pf / gp), 'PF', teamRank(tid, (x) => rec[x].pf / gpT(x)))}${nm(f1(r.pa / gp), 'PA', teamRank(tid, (x) => rec[x].pa / gpT(x), 1))}${nm(sgn(diff(tid), 1), 'Diff', teamRank(tid, diff))}${nm(`${r.hw}-${r.hl}`, 'Home')}${nm(`${r.aw}-${r.al}`, 'Away')}${nm(oddsStr(tid), 'Playoffs')}${nm(pctStr(odds[tid].c), 'Title')}</div></section>
       ${card('Roster', `<div class="scroll"><table><thead><tr><th class="t">Player</th><th class="t">Pos</th><th>Age</th><th>Ht</th><th class="grp">GP</th><th>GS</th><th>MIN</th><th class="grp">PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th class="grp">FG%</th><th>3P%</th><th>FT%</th><th class="grp">+/-</th><th class="grp">Salary</th><th>Thru</th></tr></thead><tbody>${rows}</tbody></table></div>`, `<span>Starters above the line · payroll $${roster.reduce((a, [p]) => a + (p.sal || 0), 0)}M of $${D.cap}M cap</span>`)}
       <div style="margin-top:var(--gap)">${shotProfile(tid, roster)}</div>
@@ -556,7 +573,7 @@
     const all = state.log.filter((b) => b.team === ab).reverse(), shown = AS.allBids ? all : all.slice(0, 8);
     const bids = shown.map((b) => { const l = byId.get(b.pid), [txt, cls] = status(b); return `<div class="row r-mybid">${l ? lface(l, 30) : '<span class="face" style="width:30px;height:30px"></span>'}<span class="who"><b>${esc(l ? l.n : b.name || 'Unknown player')}</b><span class="${cls}">${esc(txt)}</span></span><span class="v">${Number.isFinite(b.sal) && Number.isFinite(b.yrs) ? deal(b) : '—'}</span><span class="n">${ago(b.t)}</span></div>`; }).join('') || '<p class="note">No bids yet.</p>';
     const bid = formUrl(cfg, null, ab);
-    $app.innerHTML = `<section class="card hd" style="--c:${t.accent};--wm:url(${t.logo})">${logo(t.tid, 96)}<div><h1>${tname(t.tid)}</h1><div class="sub"><span>${closed ? 'Final auction roster' : 'The roster if every leading bid holds'}</span></div>
+    $app.innerHTML = `<section class="card hd" style="--c:${t.accent};--wm:url(${t.logo})">${logo(t.tid, 96)}<div><h1>${tname(t.tid)}</h1><div class="sub"><span>${esc(t.owner)}, owner and coach</span><span>${closed ? 'Final auction roster' : 'The roster if every leading bid holds'}</span></div>
         <div class="sub" style="margin-top:10px"><a class="btn" href="#auction">← All players</a>${bid && !closed ? `<a class="btn go" href="${bid}" target="_blank" rel="noopener">Place a bid</a>` : ''}</div></div>
         <div class="nums"><div><b>${mine.length}/${cfg.roster}</b><span>Roster</span></div><div><b>$${spent}M</b><span>Committed</span></div><div><b>$${cfg.budget - spent}M</b><span>Left</span></div></div></section>
       ${demo ? '<p class="au-demo">Demo bids, made up to show how the page works.</p>' : ''}

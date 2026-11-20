@@ -8,7 +8,10 @@
    "#EDE3C4",
    "#3E8E6E"
   ],
-  "accent": "#4FA27F"
+  "accent": "#4FA27F",
+  "owner": "Eric Lin",
+  "arena": "The Billabong",
+  "banners": []
  },
  {
   "abbrev": "WAL",
@@ -19,7 +22,10 @@
    "#2E7A3E",
    "#E8B020"
   ],
-  "accent": "#E8B020"
+  "accent": "#E8B020",
+  "owner": "Kevin Cao",
+  "arena": "The Den",
+  "banners": []
  },
  {
   "abbrev": "MAN",
@@ -30,7 +36,10 @@
    "#C8252C",
    "#A9B4C2"
   ],
-  "accent": "#D8343B"
+  "accent": "#D8343B",
+  "owner": "Philip Zhang",
+  "arena": "The Ivory Tower",
+  "banners": []
  },
  {
   "abbrev": "STO",
@@ -41,7 +50,10 @@
    "#1C9C76",
    "#FFFFFF"
   ],
-  "accent": "#22B089"
+  "accent": "#22B089",
+  "owner": "Tristan Harm",
+  "arena": "The Reef",
+  "banners": []
  },
  {
   "abbrev": "TOR",
@@ -52,7 +64,10 @@
    "#0F2650",
    "#D7262E"
   ],
-  "accent": "#4A8BEA"
+  "accent": "#4A8BEA",
+  "owner": "Dylan Ma",
+  "arena": "The Nest",
+  "banners": []
  },
  {
   "abbrev": "DUR",
@@ -63,7 +78,10 @@
    "#16244A",
    "#FFFFFF"
   ],
-  "accent": "#E8752A"
+  "accent": "#E8752A",
+  "owner": "William He",
+  "arena": "The Shipyard",
+  "banners": []
  },
  {
   "abbrev": "GOO",
@@ -74,7 +92,10 @@
    "#F08A1C",
    "#E9B820"
   ],
-  "accent": "#F29A35"
+  "accent": "#F29A35",
+  "owner": "Jason Chen",
+  "arena": "The Armoury",
+  "banners": []
  },
  {
   "abbrev": "QUE",
@@ -85,7 +106,10 @@
    "#16244A",
    "#8C97A3"
   ],
-  "accent": "#F2843A"
+  "accent": "#F2843A",
+  "owner": "Brandon Gonzalez",
+  "arena": "The Coop",
+  "banners": []
  },
  {
   "abbrev": "ROC",
@@ -96,7 +120,10 @@
    "#C8242B",
    "#2F5DA8"
   ],
-  "accent": "#D6383E"
+  "accent": "#D6383E",
+  "owner": "Yao Chen",
+  "arena": "The Lair",
+  "banners": []
  },
  {
   "abbrev": "ITH",
@@ -107,6 +134,9 @@
    "#F2B51C",
    "#8C9BB0"
   ],
-  "accent": "#F2B51C"
+  "accent": "#F2B51C",
+  "owner": "Orlando Mazzoleni",
+  "arena": "The Gorge",
+  "banners": []
  }
 ]
