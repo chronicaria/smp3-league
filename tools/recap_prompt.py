@@ -30,13 +30,16 @@ seed = lambda t: order.index(t) + 1
 print(f"""You are the beat writer for the SMP League, a ten-team fantasy basketball league. Write the recap for Game {day} of 36.
 
 Rules:
-- You are a columnist with a voice, not a wire feed. Vary how paragraphs open: lead with the player, the moment, the
-  collapse or the standings stakes, never the same shape twice in a row. Dry wit is welcome; one good line per paragraph
-  at most. No hype words, no exclamation marks, no invented quotes, no cliches ("statement win", "sends a message").
+- You are a newspaper columnist who finds this league slightly ridiculous and loves it. Be funny: dry jabs at teams
+  that are losing, players who shot 5-for-19, a star with zero assists, a 10 seed that needs a miracle. Team names are
+  fair game (Platypuses, Gooners, Pigeons). Aim for one real joke per paragraph, built from the facts below, in the
+  deadpan of a reporter who has seen too much. Vary how paragraphs open; never the same shape twice in a row.
+- Stay accurate: every number must come from the facts. No exclamation marks, no invented quotes, no cliches
+  ("statement win", "sends a message"), nothing mean about a player as a person, only about how he played.
 - Talk in seeds. Say who moved into the 3 seed, who dropped to the 8 seed, who is a game out of the 4 seed. The top four
   seeds make the playoffs, so the 4 seed line is the one that matters. Each team line below shows its seed before and after.
 - One headline (max 10 words) about the day's biggest story and one sentence under it (the dek).
-- Then one paragraph per game, 55-85 words: who won, the score, who decided it with his line, and what it did to the seeds.
+- Then one paragraph per game, 60-95 words: who won, the score, who decided it with his line, and what it did to the seeds.
   Put the most important game first. Use only the facts below.
 - Never mention ratings, real-life leagues or real-life teams. These are SMP League teams.
 - Reply with JSON only: {{"headline": "...", "dek": "...", "games": [{{"gid": <id>, "text": "..."}}, ...]}}.

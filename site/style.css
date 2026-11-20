@@ -39,6 +39,7 @@ main { padding-block: 18px 40px; min-height: 70vh; }
 .grid { display: grid; gap: var(--gap); align-items: start; }
 .g-main { grid-template-columns: minmax(0, 1fr) 364px; }
 .g-game { grid-template-columns: 364px minmax(0, 1fr); }
+.g-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .g-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .g-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .g-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -127,7 +128,7 @@ a.row:hover { background: var(--raise); color: inherit; }
 a.gc:hover { border-color: #3a424c; color: inherit; }
 .days { display: flex; align-items: center; gap: 8px; margin-bottom: var(--gap); }
 .dayrail { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; flex: 1; border: 1px solid var(--line); }
-.dayrail a { flex: 0 0 auto; min-width: 58px; text-align: center; padding: 7px 8px; font: 600 12px var(--m); color: var(--muted); border-right: 1px solid var(--line); background: var(--surface); }
+.dayrail a { flex: 1 0 auto; min-width: 34px; text-align: center; padding: 7px 8px; font: 600 12px var(--m); color: var(--muted); border-right: 1px solid var(--line); background: var(--surface); }
 .dayrail a[aria-current="true"] { color: var(--ink); background: var(--raise); box-shadow: inset 0 -2px 0 var(--gold); }
 .dayrail a.fut { color: var(--faint); }
 
@@ -254,11 +255,17 @@ a.lede:hover { border-color: #3a424c; color: inherit; } a.lede:hover .more { tex
   .g-main, .g-3, .g-game { grid-template-columns: minmax(0, 1fr); }
   .g-game > aside { order: 2; }
   .g-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g-5 { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .grow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .grow .gcell:nth-child(odd) { border-left: 0; }
+  .grow .gcell:nth-child(n+3) { border-top: 1px solid var(--line); }
   .teams-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .nums { margin-left: 0; }
 }
 @media (max-width: 720px) {
-  .g-2, .g-4 { grid-template-columns: minmax(0, 1fr); }
+  .g-2, .g-4, .grow { grid-template-columns: minmax(0, 1fr); }
+  .grow .gcell { border-left: 0; border-top: 1px solid var(--line); } .grow .gcell:first-child { border-top: 0; }
+  .lgrid.mx { grid-template-columns: 64px 1fr 1fr; }
   .gh-in { grid-template-columns: 1fr; padding: 14px; }
   .gt.h { flex-direction: row; text-align: left; }
   .gt .big { font-size: 40px; }
@@ -271,3 +278,71 @@ a.lede:hover { border-color: #3a424c; color: inherit; } a.lede:hover .more { tex
 .card.narrow { max-width: 720px; }
 input.q, select.q { width: 100%; }
 }
+
+/* standings movement */
+.mv { display: inline-block; width: 14px; font-size: 9px; text-align: left; }
+td.nm .mv { margin-right: 2px; }
+
+/* scores: one row per game */
+.grow { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 1fr) 210px; }
+.gcell { display: grid; align-content: center; gap: 8px; padding: 14px 16px; min-width: 0; border-left: 1px solid var(--line); }
+.gcell:first-child { border-left: 0; }
+a.gcell:hover { background: var(--raise); color: inherit; }
+.label { font: 600 10.5px var(--m); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.cap { font: 400 11.5px var(--m); color: var(--muted); }
+.ls2 table th, .ls2 table td { background: none; border: 0; padding: 4px 6px; text-align: center; font-size: 13px; color: var(--muted); }
+.ls2 table th.t { text-align: left; padding-left: 0; color: var(--ink); font: 700 11px var(--f); letter-spacing: .07em; }
+.ls2 td.tm { text-align: left; padding-left: 0; }
+.ls2 td.tm { display: flex; align-items: center; gap: 10px; }
+.ls2 td.tm b { display: block; font: 600 16px/1.2 var(--f); color: var(--ink); }
+.ls2 td.tm small { font: 400 11.5px var(--m); color: var(--faint); }
+.ls2 td.tt { font: 700 22px var(--m); color: var(--ink); text-align: right; padding-right: 0; white-space: nowrap; }
+.ls2 td.tt i { font-style: normal; font-size: 11px; margin-left: 4px; vertical-align: middle; }
+.ls2 tr.lost td.tm b, .ls2 tr.lost td.tt { color: var(--muted); font-weight: 500; }
+.ls2 tbody tr:hover td { background: none; }
+.tp { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 10px; align-items: center; }
+.tp b { font: 600 13.5px var(--f); } .tp small { font: 400 11px var(--m); color: var(--faint); }
+.tp em { display: block; font: 500 12px var(--m); font-style: normal; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ks { margin-bottom: 4px; } .ks td, .ks th { background: none; border: 0; padding: 2px 4px; text-align: center; font-size: 12.5px; }
+.ks th { color: var(--faint); font-size: 10px; } .ks thead td { font: 600 11px var(--m); color: var(--muted); }
+.ks tbody tr:hover td { background: none; }
+.line { font: 700 22px var(--m); }
+.grow.up .gcell { align-content: center; }
+
+/* free agents by position */
+.r-fa { grid-template-columns: 30px 32px minmax(0, 1fr); }
+.r-fa .bd { font: 600 12.5px var(--m); color: var(--gold); text-align: right; }
+
+/* lineups */
+.tpick { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; margin-bottom: var(--gap); }
+.tpick button { display: grid; justify-items: center; gap: 4px; padding: 8px 4px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); color: var(--muted); font: 600 11px var(--m); cursor: pointer; }
+.tpick button:hover { background: var(--raise); color: var(--ink); }
+.tpick button[aria-pressed="true"] { color: var(--ink); border-color: var(--gold); background: var(--raise); }
+.lres { padding: 16px; border-bottom: 1px solid var(--line); }
+.lhint { padding: 26px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); }
+.lgrid { display: grid; gap: 8px; }
+.lgrid.two { grid-template-columns: 1fr 1fr; }
+.lgrid.mx { grid-template-columns: 110px 1fr 1fr; align-items: stretch; }
+.axis { display: grid; place-items: center; font: 600 11px var(--m); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.lt { display: grid; gap: 4px; justify-items: center; padding: 18px 12px; border: 1px solid var(--line); text-align: center; }
+.lt b { font: 800 34px/1 var(--m); letter-spacing: -.02em; }
+.ptiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; padding: 14px 16px 16px; }
+.ptile { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center; padding: 7px 10px; background: none; border: 1px solid var(--line); border-radius: var(--r); color: var(--ink); text-align: left; cursor: pointer; }
+.ptile:hover { background: var(--raise); }
+.ptile[aria-pressed="true"] { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, var(--surface)); }
+.ptile b { display: block; font: 600 13.5px/1.2 var(--f); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ptile small { font: 400 11px var(--m); color: var(--muted); }
+.r-swing { grid-template-columns: 30px minmax(0, 1fr) 150px 52px; }
+.r-unit { grid-template-columns: auto minmax(0, 1fr) 110px 52px; min-height: 52px; }
+.faces { display: inline-flex; } .faces .face { margin-left: -8px; border: 2px solid var(--surface); } .faces .face:first-child { margin-left: 0; }
+.dv { position: relative; height: 8px; background: #2A3037; }
+.dv::after { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--faint); }
+.dv i { position: absolute; top: 0; bottom: 0; }
+.dv i.p { left: 50%; background: var(--up); } .dv i.n { right: 50%; background: var(--bad); }
+@media (max-width: 720px) { .tpick { grid-template-columns: repeat(5, minmax(0, 1fr)); } .r-swing { grid-template-columns: 30px minmax(0, 1fr) 60px 48px; } .r-unit { grid-template-columns: minmax(0, 1fr) 48px; } .r-unit .faces, .r-unit .dv { display: none; } }
+.grow svg { height: 84px; }
+.ls2 table { width: 100%; table-layout: fixed; }
+.ls2 table th:not(.t), .ls2 table td:not(.tm) { width: 34px; }
+.ls2 table th:last-child, .ls2 td.tt { width: 64px; }
+.grow svg { width: 100%; display: block; overflow: hidden; }
+.gcell { overflow: hidden; }
