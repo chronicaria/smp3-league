@@ -315,6 +315,16 @@
   }
 
   /* ---------- teams ---------- */
+  function shotProfile(tid, roster) {
+    const Z = [['Rim', 'fgAtRim', 'fgaAtRim'], ['Post', 'fgLowPost', 'fgaLowPost'], ['Mid', 'fgMidRange', 'fgaMidRange'], ['Three', 'tp', 'tpa']];
+    const lg = T.reduce((a, t) => { for (const k of SUM) a[k] += tstat[t.tid].me[k]; a.gp += tstat[t.tid].me.gp; return a; }, blank());
+    const line = (label, s, g, cls = '') => { const fga = Math.max(1, s.fga);
+      return `<div class="sp ${cls}"><span class="nm2">${label}</span><span class="n">${f1(s.fga / g)}</span><span class="mix">${Z.map(([, , a], i) => `<i class="z${i + 1}" style="width:${100 * s[a] / fga}%" title="${Z[i][0]}: ${(100 * s[a] / fga).toFixed(1)}% of shots"></i>`).join('')}</span>${Z.map(([, m, a], i) => `<span class="zc"><b>${(100 * s[a] / fga).toFixed(0)}%</b><small>${s[a] >= 5 ? pct(s[m], s[a]) : '—'}</small></span>`).join('')}</div>`; };
+    const players = roster.filter(([, s]) => s && s.fga >= 10).sort((a, b) => b[1].fga / b[1].gp - a[1].fga / a[1].gp);
+    return card('Shot profile', `<div class="sp head"><span class="nm2"></span><span class="n">FGA</span><span class="mix lg">${Z.map(([lab], i) => `<span><i class="sw z${i + 1}"></i>${lab}</span>`).join('')}</span>${Z.map(([lab]) => `<span class="zc"><b>${lab}</b><small>share · FG%</small></span>`).join('')}</div>
+      ${line(`${logo(tid, 20)}<b>${esc(team(tid).name)}</b>`, tstat[tid].me, gpT(tid), 'tot')}${line('<span class="muted">League average</span>', lg, lg.gp, 'tot')}
+      ${players.map(([p, s]) => line(`<a href="#player-${p.pid}">${face(p.pid, 26)}<span>${esc(p.name)}</span></a>`, s, s.gp)).join('')}`, '<span>Where the shots come from, per game</span>');
+  }
   function teamPage(abbrev) {
     const t = T.find((x) => x.abbrev === abbrev); if (!t) return notFound();
     const tid = t.tid, o = order(), r = rec[tid], gp = gpT(tid), m = tstat[tid].me, op = tstat[tid].op;
@@ -335,6 +345,7 @@
     $app.innerHTML = `<section class="card hd" style="--c:${t.accent}">${logo(tid, 96)}<div><h1>${tname(tid)}</h1><div class="sub"><span>${recStr(tid)} · ${ord(o.indexOf(tid) + 1)} of 10 · ${gb(tid, o[0])} GB</span><span class="form">${r.res.slice(-10).map((x) => `<i class="${x}">${x}</i>`).join('')}</span></div></div>
       <div class="nums">${nm(f1(r.pf / gp), 'PF', teamRank(tid, (x) => rec[x].pf / gpT(x)))}${nm(f1(r.pa / gp), 'PA', teamRank(tid, (x) => rec[x].pa / gpT(x), 1))}${nm(sgn(diff(tid), 1), 'Diff', teamRank(tid, diff))}${nm(`${r.hw}-${r.hl}`, 'Home')}${nm(`${r.aw}-${r.al}`, 'Away')}${nm(oddsStr(tid), 'Playoffs')}${nm(pctStr(odds[tid].c), 'Title')}</div></section>
       ${card('Roster', `<div class="scroll"><table><thead><tr><th class="t">Player</th><th class="t">Pos</th><th>Age</th><th>Ht</th><th class="grp">GP</th><th>GS</th><th>MIN</th><th class="grp">PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th class="grp">FG%</th><th>3P%</th><th>FT%</th><th class="grp">+/-</th><th class="grp">Salary</th><th>Thru</th></tr></thead><tbody>${rows}</tbody></table></div>`, `<span>Starters above the line · payroll $${roster.reduce((a, [p]) => a + (p.sal || 0), 0)}M of $${D.cap}M cap</span>`)}
+      <div style="margin-top:var(--gap)">${shotProfile(tid, roster)}</div>
       <div class="grid g-main" style="margin-top:var(--gap)"><div class="stack">${card('Results', `<div class="scroll"><table><thead><tr><th class="t">Game</th><th class="t">Opponent</th><th class="t">Result</th><th class="t">Top scorer</th></tr></thead><tbody>${games.join('')}</tbody></table></div>`, `<span>${gp} games</span>`)}</div>
       <aside class="stack">${card('Team leaders', tl('Points', 'pts') + tl('Rebounds', 'reb') + tl('Assists', 'ast') + tl('Steals', 'stl') + tl('Blocks', 'blk'))}${card('Team profile', profile, '<span>Rank of 10</span>')}${card('Scoring share', `<div style="padding:8px 0">${share}</div>`, '<span>Share of team points</span>')}${card('Next up', next || '<p class="note">Regular season complete.</p>')}${injuryCard(tid)}</aside></div>`;
   }
@@ -450,14 +461,99 @@
         return `<div class="row r-unit"><span class="faces">${ps.map((pid) => face(pid, 30)).join('')}</span><span class="who"><b>${ps.map(last).join(' · ')}</b><span>${Math.round(x[0] / 60)} min · scores ${f1(x[1] / x[0] * 2880)} · allows ${f1(x[2] / x[0] * 2880)}</span></span>${bar(net(x), mxU)}<span class="v ${net(x) >= 0 ? 'up' : 'dn'}">${sgn(net(x), 1)}</span></div>`; }).join('') || '<p class="note">No five-man unit has played two minutes together yet.</p>', `<span>${team(LS.team).abbrev} · ${rows.length} units used</span>`)}`;
     document.querySelectorAll('[data-lteam]').forEach((b) => b.addEventListener('click', () => { LS.team = +b.dataset.lteam; LS.a = LS.b = ''; lineupsPage(); }));
   }
+  /* ---------- auction: computed in the browser from the published bid sheet ---------- */
+  let AU = null, auTimer = null; const AS = { q: '', only: '', open: null };
+  const POSN = ['PG', 'SG', 'SF', 'PF', 'C'];
+  function parseCsv(text) {
+    const rows = []; let row = [], cur = '', q = false;
+    for (let i = 0; i < text.length; i++) { const ch = text[i];
+      if (q) { if (ch === '"' && text[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; }
+      else if (ch === '"') q = true; else if (ch === ',') { row.push(cur); cur = ''; } else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; } else if (ch !== '\r') cur += ch; }
+    if (cur || row.length) { row.push(cur); rows.push(row); }
+    return rows;
+  }
+  async function loadAuction() {
+    if (AU && Date.now() - AU.at < 60e3) return AU;
+    const raw = await fetch('data/auction.json').then((r) => r.json()), demo = !raw.csv;
+    const text = await fetch(raw.csv || 'data/auction-demo.csv', { cache: 'no-store' }).then((r) => r.text());
+    const start = raw.start ? Date.parse(raw.start) : (AU ? AU.cfg.start : Date.now() - 20 * 3600e3), cfg = { ...raw, start, close: start + raw.hours * 3600e3 };
+    const byName = new Map(cfg.lots.map((l) => [l.n.toLowerCase(), l.id]));
+    const abbr = (s) => { const u = String(s).trim().toUpperCase(); return (T.find((t) => t.abbrev === u || t.name.toUpperCase() === u || `${t.region} ${t.name}`.toUpperCase() === u) || { abbrev: u }).abbrev; };
+    const rows = parseCsv(text), head = (rows.shift() || []).map((h) => h.toLowerCase()), ix = (k) => head.findIndex((h) => h.includes(k));
+    const c = { t: ix('time'), team: ix('team'), p: ix('player'), s: ix('salary'), y: ix('year') };
+    const when = (v) => (String(v).startsWith('h:') ? start + parseFloat(v.slice(2)) * 3600e3 : Date.parse(v));
+    const bids = rows.filter((r) => r.length > Math.max(c.t, c.team, c.p, c.s, c.y) && r[c.team]).map((r) => ({ t: when(r[c.t]), team: abbr(r[c.team]), pid: byName.get(String(r[c.p]).trim().toLowerCase()), name: r[c.p], sal: Number(String(r[c.s]).replace(/[$,mM\s]/g, '')), yrs: Number(String(r[c.y]).replace(/[^\d.]/g, '')) }));
+    AU = { cfg, demo, bids, state: SMPAuction.run(cfg, bids), at: Date.now(), byId: new Map(cfg.lots.map((l) => [l.id, l])) };
+    return AU;
+  }
+  const lface = (l, size = 32) => { const ini = esc(l.n.split(' ').map((x) => x[0]).join('').slice(0, 2)); return `<span class="face" style="width:${size}px;height:${size}px">${l.espn ? `<img src="https://a.espncdn.com/i/headshots/nba/players/full/${l.espn}.png" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;ini&quot;>${ini}</span>'">` : `<span class="ini">${ini}</span>`}</span>`; };
+  const tidOf = (ab) => T.find((t) => t.abbrev === ab)?.tid;
+  const ago = (t) => { const m = Math.max(0, Math.round((Date.now() - t) / 60e3)); return m < 60 ? `${m}m ago` : `${Math.floor(m / 60)}h ${m % 60}m ago`; };
+  const deal = (b) => `$${b.sal}M × ${b.yrs}`;
+  const clockText = (cfg) => { const ms = cfg.close - Date.now(); if (ms <= 0) return 'Closed'; const h = Math.floor(ms / 3600e3), m = Math.floor(ms % 3600e3 / 60e3), s = Math.floor(ms % 60e3 / 1e3); return h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m ${String(s).padStart(2, '0')}s`; };
+  const formUrl = (cfg, l, ab) => { const f = cfg.form; if (!f || !f.url) return null; const q = [['usp', 'pp_url'], [f.player && `entry.${f.player}`, l && l.n], [f.team && `entry.${f.team}`, ab]].filter((x) => x[0] && x[1]).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&'); return `${f.url}?${q}`; };
+  function tick(cfg) { clearInterval(auTimer); auTimer = setInterval(() => { const el = document.getElementById('au-clock'); if (!el) return clearInterval(auTimer); el.textContent = clockText(cfg); }, 1000); }
+
+  async function auctionPage(arg) {
+    if (!AU) $app.innerHTML = '<p class="muted">Loading the auction…</p>';
+    const { cfg, state, demo, byId } = await loadAuction();
+    if (arg) return auctionTeam(arg);
+    const closed = Date.now() >= cfg.close, q = AS.q.toLowerCase(), bidLink = formUrl(cfg);
+    const tiles = [...T].sort((a, b) => a.region.localeCompare(b.region)).map((t) => { const s = state.teams[t.abbrev];
+      return `<a class="au-team" href="#auction-${t.abbrev}">${logo(t.tid, 38)}<span class="who"><b>${esc(t.name)}</b><span>${s.n}/${cfg.roster} players</span></span><span class="amt"><b>$${s.left}M</b><span>left</span></span><span class="meter"><i style="width:${100 * s.spent / cfg.budget}%;background:${t.accent}"></i></span></a>`; }).join('');
+    const recent = state.log.filter((b) => b.ok).slice(-10).reverse().map((b) => { const l = byId.get(b.pid);
+      return `<a class="row r-bid" href="#auction-${b.team}">${logo(tidOf(b.team), 22)}${lface(l, 30)}<span class="who"><b>${esc(l.n)}</b><span>${team(tidOf(b.team)).name} · ${ago(b.t)}</span></span><span class="v">${deal(b)}</span></a>`; }).join('');
+    const show = (l) => { const L = state.lots.get(l.id); return (!q || l.n.toLowerCase().includes(q)) && (!AS.only || (AS.only === 'open' ? !L.lead : L.lead && L.lead.team === AS.only)); };
+    const lot = (l) => { const L = state.lots.get(l.id), ld = L.lead, open = AS.open === l.id, espn = l.espn ? `https://www.espn.com/nba/player/_/id/${l.espn}` : null, bid = formUrl(cfg, l);
+      return `<div class="lot${open ? ' on' : ''}"><button type="button" class="lot-h" data-lot="${l.id}" aria-expanded="${open}"><span class="bd">${l.rk}</span>${lface(l, 36)}<span class="who"><b>${esc(l.n)}</b>${
+        ld ? `<span class="px">${logo(tidOf(ld.team), 16)}<b>$${ld.sal}M</b><small>× ${ld.yrs} · ${team(tidOf(ld.team)).abbrev}</small></span>` : `<span class="px none"><small>opens at</small><b>$${l.open}M</b></span>`}</span></button>${
+        open ? `<div class="lot-d"><p class="cap">${l.pos} · ${l.age} years old · ${htS(l.ht)} · #${l.rk} on the board</p>${L.history.length ? [...L.history].reverse().slice(0, 6).map((b, i) => `<div class="hb${i ? '' : ' top'}">${logo(tidOf(b.team), 18)}<span>${team(tidOf(b.team)).abbrev}</span><b>${deal(b)}</b><small>${ago(b.t)}</small></div>`).join('') + (L.history.length > 6 ? `<p class="cap">and ${L.history.length - 6} earlier bids</p>` : '') : `<p class="cap">No bids yet. The first must be worth at least $${l.open}M for one year.</p>`}
+          <div class="lot-a">${bid && !closed ? `<a class="btn go" href="${bid}" target="_blank" rel="noopener">Bid on ${esc(l.n.split(' ').slice(-1)[0])}</a>` : ''}${espn ? `<a class="btn" href="${espn}" target="_blank" rel="noopener">ESPN page ↗</a>` : ''}</div></div>` : ''}</div>`; };
+    const cols = POSN.map((pos) => { const xs = cfg.lots.filter((l) => l.pos === pos && show(l)); return card(pos, xs.map(lot).join('') || '<p class="note">Nobody matches.</p>', `<span>${xs.length}</span>`); }).join('');
+    const led = cfg.lots.filter((l) => state.lots.get(l.id).lead).length, money = Object.values(state.teams).reduce((a, s) => a + s.spent, 0);
+    $app.innerHTML = `<div class="au-head"><div><h1>Auction</h1><p class="lede2">Every team has <b>$${cfg.budget}M</b> to build a <b>${cfg.roster}</b>-man roster from the top ${cfg.lots.length} players on the board. Bid a salary and a length; the best offer when the clock runs out wins. Ratings are private, so do your own homework.</p></div>
+        <div class="au-clock"><span class="label">${closed ? 'The auction is over' : 'Bidding closes in'}</span><b id="au-clock">${clockText(cfg)}</b><span class="cap">${led} of ${cfg.lots.length} players have a bid · $${money}M committed</span>${bidLink && !closed ? `<a class="btn go" href="${bidLink}" target="_blank" rel="noopener">Place a bid</a>` : ''}</div></div>
+      ${demo ? '<p class="au-demo">Demo bids. These are made up to show how the page works; real bids appear here once the bid form is connected.</p>' : ''}
+      <div class="au-teams">${tiles}</div>
+      <div class="grid g-main" style="margin-top:var(--gap)"><div class="stack">${card('How bids compare', `<div class="rules"><div><b>Salary × length.</b> An offer's value is the salary plus a quarter for every extra year: $10M for 3 years beats $14M for 1.</div><div><b>Whole millions, 1 to 5 years.</b> A new offer must beat the best one so far, or reach the opening price if there is none.</div><div><b>Stay inside $${cfg.budget}M.</b> Your leading bids, plus $1M for every roster spot still empty, cannot pass the budget. Get outbid and that money is yours again.</div><div><b>One deadline.</b> Everything closes together after ${cfg.hours} hours. A bid a second before it counts.</div></div>`)}${card('Biggest offers', [...state.lots.values()].filter((L) => L.lead).sort((a, b) => b.lead.score - a.lead.score).slice(0, 6).map((L, i) => `<a class="row r-bid${i ? '' : ' first'}" href="#auction-${L.lead.team}">${logo(tidOf(L.lead.team), 22)}${lface(L, 30)}<span class="who"><b>${esc(L.n)}</b><span>${team(tidOf(L.lead.team)).name} · ${L.history.length} bid${L.history.length === 1 ? '' : 's'}</span></span><span class="v">${deal(L.lead)}</span></a>`).join('') || '<p class="note">No bids yet.</p>', '<span>By salary × length</span>')}</div>
+        <aside class="stack">${card('Latest bids', recent || '<p class="note">No bids yet.</p>', `<span>${state.log.filter((b) => b.ok).length} accepted</span>`)}</aside></div>
+      <div class="tools" style="margin-top:22px"><input class="q" id="auq" type="search" placeholder="Search players" value="${esc(AS.q)}" aria-label="Search players"><div class="seg" role="group" aria-label="Show">${[['', 'All'], ['open', 'No bids yet']].map(([k, lab]) => `<button type="button" data-only="${k}" aria-pressed="${AS.only === k}">${lab}</button>`).join('')}</div>
+        <select class="q" id="auteam" aria-label="Led by"><option value="">Led by any team</option>${[...T].sort((a, b) => a.region.localeCompare(b.region)).map((t) => `<option value="${t.abbrev}"${AS.only === t.abbrev ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select></div>
+      <div class="grid g-5">${cols}</div>`;
+    tick(cfg);
+    const inp = document.getElementById('auq');
+    inp.addEventListener('input', () => { AS.q = inp.value; auctionPage(); requestAnimationFrame(() => { const n = document.getElementById('auq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }); });
+    document.querySelectorAll('[data-only]').forEach((b) => b.addEventListener('click', () => { AS.only = b.dataset.only; auctionPage(); }));
+    document.getElementById('auteam').addEventListener('change', (e) => { AS.only = e.target.value; auctionPage(); });
+    document.querySelectorAll('[data-lot]').forEach((b) => b.addEventListener('click', () => { const y = scrollY; AS.open = AS.open === b.dataset.lot ? null : b.dataset.lot; auctionPage().then(() => scrollTo(0, y)); }));
+  }
+
+  function auctionTeam(ab) {
+    const { cfg, state, byId, demo } = AU, t = T.find((x) => x.abbrev === ab); if (!t) return notFound();
+    const s = state.teams[ab], closed = Date.now() >= cfg.close, filled = closed ? SMPAuction.fill(cfg, state).filter((x) => x.team === ab) : [];
+    const mine = [...s.players.map((id) => ({ l: byId.get(id), b: state.lots.get(id).lead })), ...filled.map((x) => ({ l: byId.get(x.pid), b: x, fill: true }))];
+    const col = (pos) => { const xs = mine.filter((x) => x.l.pos === pos).sort((a, b) => b.b.sal - a.b.sal || a.l.rk - b.l.rk);
+      return card(pos, xs.map((x, i) => `<div class="dc${i ? '' : ' first'}">${lface(x.l, i ? 40 : 64)}<b>${esc(x.l.n)}</b><span>${deal(x.b)}${x.fill ? ' · assigned' : ''}</span><small>#${x.l.rk} on the board${x.l.espn ? ` · <a href="https://www.espn.com/nba/player/_/id/${x.l.espn}" target="_blank" rel="noopener">ESPN ↗</a>` : ''}</small></div>`).join('') || '<div class="dc none"><span>Nobody yet</span></div>', `<span>${xs.length}</span>`); };
+    const log = state.log.filter((b) => b.team === ab).reverse().slice(0, 40).map((b) => `<tr><td class="t" style="font-family:var(--f)">${esc(b.name || '')}</td><td>${Number.isFinite(b.sal) ? `$${b.sal}M` : '—'}</td><td>${Number.isFinite(b.yrs) ? b.yrs : '—'}</td><td class="t ${b.ok ? 'up' : 'dn'}" style="font-family:var(--f)">${b.ok ? (state.lots.get(b.pid).lead.team === ab && state.lots.get(b.pid).lead.t === b.t ? 'Leading' : 'Outbid since') : esc(b.why)}</td><td>${ago(b.t)}</td></tr>`).join('');
+    const nm = (v, lab) => `<div><b>${v}</b><span>${lab}</span></div>`, bid = formUrl(cfg, null, ab);
+    $app.innerHTML = `<section class="card hd" style="--c:${t.accent}">${logo(t.tid, 96)}<div><h1>${tname(t.tid)}</h1><div class="sub"><span>${closed ? 'Final auction roster' : 'The roster if every leading bid holds'}</span></div>
+        <div class="sub" style="margin-top:10px"><a class="btn" href="#auction">← All players</a>${bid && !closed ? `<a class="btn go" href="${bid}" target="_blank" rel="noopener">Place a bid</a>` : ''}<a class="btn" href="#team-${ab}">Team page</a></div></div>
+        <div class="nums">${nm(`${s.n + filled.length}/${cfg.roster}`, 'Roster')}${nm(`$${s.spent + filled.reduce((a, x) => a + x.sal, 0)}M`, 'Committed')}${nm(`$${s.left}M`, 'Left')}${nm(closed ? '—' : `$${s.maxBid}M`, 'Most on one more')}</div></section>
+      ${demo ? '<p class="au-demo">Demo bids, made up to show how the page works.</p>' : ''}
+      <div class="page-h"><h1 style="font-size:20px">Depth chart</h1><span>By position, biggest contract first</span></div>
+      <div class="grid g-5">${POSN.map(col).join('')}</div>
+      <div style="margin-top:var(--gap)">${card('Bids', `<div class="scroll"><table><thead><tr><th class="t">Player</th><th>Salary</th><th>Years</th><th class="t">Status</th><th>When</th></tr></thead><tbody>${log || '<tr><td class="t muted" colspan="5">No bids yet.</td></tr>'}</tbody></table></div>`, `<span>${s.bids} placed · ${s.rejected} refused</span>`)}</div>`;
+  }
+
   const notFound = () => { $app.innerHTML = '<p class="muted">That page does not exist. <a href="#home">Back to the front page</a>.</p>'; };
 
   /* ---------- router ---------- */
   function route() {
     const h = location.hash.slice(1) || 'home', i = h.indexOf('-'), kind = i < 0 ? h : h.slice(0, i), arg = i < 0 ? '' : h.slice(i + 1);
-    const nav = { home: 'home', scores: 'scores', game: 'scores', standings: 'standings', leaders: 'leaders', players: 'players', player: 'players', freeagents: 'freeagents', draft: 'draft', lineups: 'lineups', recap: 'home' }[kind];
+    const nav = { home: 'home', scores: 'scores', game: 'scores', standings: 'standings', leaders: 'leaders', players: 'players', player: 'players', freeagents: 'freeagents', draft: 'draft', lineups: 'lineups', recap: 'home', auction: 'auction' }[kind];
+    clearInterval(auTimer);
     document.querySelectorAll('[data-nav]').forEach((a) => (a.dataset.nav === nav ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
-    ({ home, scores: () => scores(+arg), game: () => game(+arg), standings, team: () => teamPage(arg), player: () => player(+arg), leaders: leadersPage, players: playersPage, freeagents: freeAgents, draft: draftPage, lineups: lineupsPage, recap: () => recapPage(+arg) }[kind] || notFound)();
+    ({ home, scores: () => scores(+arg), game: () => game(+arg), standings, team: () => teamPage(arg), player: () => player(+arg), leaders: leadersPage, players: playersPage, freeagents: freeAgents, draft: draftPage, lineups: lineupsPage, recap: () => recapPage(+arg), auction: () => auctionPage(arg) }[kind] || notFound)();
     window.scrollTo(0, 0);
   }
 
