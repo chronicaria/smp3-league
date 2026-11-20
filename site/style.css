@@ -492,3 +492,4 @@ td b.hi { font-weight: 800; color: var(--ink); }
 @media (max-width: 900px) { .rules.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rules.four div { border-bottom: 1px solid var(--soft); } .gh-in::before, .gh-in::after { display: none; } }
 td.op { white-space: nowrap; }
 .au-tools #auq { width: 190px; } .au-tools #auteam { width: 170px; }
+td.op a { display: inline-flex; align-items: center; vertical-align: middle; } td.op .logo { margin-right: 5px; }
