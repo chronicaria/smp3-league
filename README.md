@@ -36,6 +36,8 @@ Until it is connected, the page shows made-up demo bids. To go live:
 5. Optional prefilled bid links: in the Form, Get pre-filled link, and copy the form URL and each question's `entry.<number>` into `form`.
 6. Commit and push `site/data/auction.json`. The page re-reads the sheet every minute; Google refreshes a published sheet within about five minutes.
 
+Simpler variant with no team code (anyone with the link can bid as any team): four questions (Team, Player, Salary, Years) and publish the `Form Responses 1` tab itself as CSV; skip step 2. Set `tz` to the sheet's time zone as a UTC offset (File > Settings in the sheet) so viewers in other time zones read bid times correctly. The settings (`start`, `csv`, `form`, `tz`) live in `tools/make_auction_data.py`; rerun it after changing them.
+
 Bids are public. A bid stamped at or after the deadline is ignored, as are bids that break a rule; each team's page lists its refused bids with the reason. After the deadline, teams short of 12 players are filled from the best unsold players (see `fill` in `site/auction.js`).
 
 `~/Desktop/Code/smp-auction` (the earlier Apps Script version with secret proxy bids) is superseded by this.

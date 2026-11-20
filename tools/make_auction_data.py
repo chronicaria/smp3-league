@@ -25,6 +25,7 @@ lots = [{k: v for k, v in dict(id=p['id'], rk=p['rk'], n=p['n'], pos=p['pos'], a
 cfg = dict(
     start=None,          # e.g. "2026-12-21T12:00:00-05:00"; null = demo mode (the clock starts 20 hours before you load the page)
     hours=48, budget=BUDGET, roster=ROSTER, max=MAX,
+    tz='-05:00',         # the bid sheet's time zone as a UTC offset (File > Settings in the sheet); -05:00 is US Eastern in winter
     csv='',              # the published "Public bids" sheet tab, as CSV; empty = use auction-demo.csv
     form=dict(url='', team='', player='', salary='', years=''),   # Google Form prefill: the form URL and each question's entry id
     teams=TEAMS, lots=lots)

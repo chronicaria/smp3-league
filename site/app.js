@@ -514,7 +514,8 @@
     const abbr = (s) => { const u = String(s).trim().toUpperCase(); return (T.find((t) => t.abbrev === u || t.name.toUpperCase() === u || `${t.region} ${t.name}`.toUpperCase() === u) || { abbrev: u }).abbrev; };
     const rows = parseCsv(text), head = (rows.shift() || []).map((h) => h.toLowerCase()), ix = (k) => head.findIndex((h) => h.includes(k));
     const c = { t: ix('time'), team: ix('team'), p: ix('player'), s: ix('salary'), y: ix('year') };
-    const when = (v) => (String(v).startsWith('h:') ? start + parseFloat(v.slice(2)) * 3600e3 : Date.parse(v));
+    // Google Sheets stamps look like 11/20/2026 14:03:22 in the sheet's own time zone; read them with cfg.tz so every viewer, in any time zone, gets the same instant
+    const when = (v) => { const m = /^(\d+)\/(\d+)\/(\d+) (\d+):(\d+):(\d+)$/.exec(String(v).trim()), z = (n) => String(n).padStart(2, '0'); return String(v).startsWith('h:') ? start + parseFloat(v.slice(2)) * 3600e3 : m ? Date.parse(`${m[3]}-${z(m[1])}-${z(m[2])}T${z(m[4])}:${z(m[5])}:${z(m[6])}${raw.tz || '-05:00'}`) : Date.parse(v); };
     const bids = rows.filter((r) => r.length > Math.max(c.t, c.team, c.p, c.s, c.y) && r[c.team]).map((r) => ({ t: when(r[c.t]), team: abbr(r[c.team]), pid: byName.get(String(r[c.p]).trim().toLowerCase()), name: r[c.p], sal: Number(String(r[c.s]).replace(/[$,mM\s]/g, '')), yrs: Number(String(r[c.y]).replace(/[^\d.]/g, '')) }));
     AU = { cfg, demo, bids, state: SMPAuction.run(cfg, bids), at: Date.now(), byId: new Map(cfg.lots.map((l) => [l.id, l])) };
     return AU;
