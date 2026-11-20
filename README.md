@@ -23,11 +23,11 @@ Preview: `python3 -m http.server 8795 --directory site`.
 
 ## Auction
 
-The Auction tab (`#auction`, `#auction-<ABBR>`) runs entirely in the browser: it reads a list of bids and applies the rules in `site/auction.js` (salary in whole $M, 1-5 years, score = salary x (1 + 0.25 x (years - 1)), $100M budget with $1M kept per open roster spot, 12 players, one deadline 48 hours after the start). `node tools/test_auction.mjs` checks the rules. `python3 tools/make_auction_data.py` rebuilds `site/data/auction.json` (the top 200 players; every player opens at $1M) and the demo bids.
+The Auction tab (`#auction`, `#auction-<ABBR>`) runs entirely in the browser: it reads a list of bids and applies the rules in `site/auction.js` (salary in whole $M, 1-5 years, score = salary x (1 + 0.25 x (years - 1)), $100M budget with $1M kept per open roster spot, 12 players, one deadline 48 hours after the start). `node tools/test_auction.mjs` checks the rules. `python3 tools/make_auction_data.py` rebuilds `site/data/auction.json` (the top 300 players; every player opens at $1M) and the demo bids.
 
 Until it is connected, the page shows made-up demo bids. To go live:
 
-1. **Google Form** with five questions: Team (dropdown of the ten abbreviations), Team code (short answer), Player (dropdown: paste the 200 names from `site/data/auction.json`), Salary in $M (number, whole), Years (dropdown 1-5).
+1. **Google Form** with five questions: Team (dropdown of the ten abbreviations), Team code (short answer), Player (dropdown: paste the 300 names from `site/data/auction.json`), Salary in $M (number, whole), Years (dropdown 1-5).
 2. In the linked **Sheet**, add a tab `Teams` with each abbreviation and its secret code, and a tab `Public bids` whose cell A1 holds
    `=QUERY({'Form Responses 1'!A:F, ARRAYFORMULA(IFERROR(VLOOKUP('Form Responses 1'!B:B, Teams!A:B, 2, FALSE)='Form Responses 1'!C:C))}, "select Col1, Col2, Col4, Col5, Col6 where Col7 = TRUE label Col1 'Timestamp', Col2 'Team', Col4 'Player', Col5 'Salary', Col6 'Years'", 1)`
    (adjust the column letters if your question order differs). This keeps the team codes out of the public tab and drops bids with a wrong code.

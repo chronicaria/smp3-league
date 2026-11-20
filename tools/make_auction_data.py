@@ -1,4 +1,4 @@
-"""Auction config for the league site: the top 200 players on the draft board with opening prices, plus demo bids.
+"""Auction config for the league site: the top 300 players on the draft board, plus demo bids.
 usage: python3 tools/make_auction_data.py
 Writes site/data/auction.json and site/data/auction-demo.csv. No ratings ship: only board rank, name, position, age,
 height and the ESPN id (for the face and the link to his ESPN page).
@@ -9,7 +9,7 @@ import csv, json, os, random
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BOARD = '/Users/andrewpark/Code/rome-kits/Knowledge/Sports/Basketball/SMP III/board/players.json'
 TEAMS = [t['abbrev'] for t in json.load(open(os.path.join(ROOT, 'engine/teams.json')))]
-N, BUDGET, ROSTER, MAX = 200, 100, 12, 35
+N, BUDGET, ROSTER, MAX = 300, 100, 12, 35
 board = json.load(open(BOARD))[:N]
 
 def curve(a): return [min(MAX, a * r ** -0.6) for r in range(1, 121)]
