@@ -1,7 +1,7 @@
 """Auction config for the league site: every player on the draft board, plus demo bids.
 usage: python3 tools/make_auction_data.py
 Writes site/data/auction.json and site/data/auction-demo.csv. No ratings ship: only board rank, name, position, age,
-height, the ESPN id (for the face and the link to his ESPN page) and last season's real per-game line.
+height, the ESPN id, `alt` (an accented name as the form first listed it by mistake, UTF-8 read as MacRoman, so bids made under that spelling still count) (for the face and the link to his ESPN page) and last season's real per-game line.
 
 Every player opens at $1M (Andrew, 11-20: enough teams will bid that stars cannot go cheap). The expected-price curve
 a * rank^-0.6 (capped at $35M, top 120 totalling $1B) is only used to make the demo bids look plausible."""
@@ -19,7 +19,7 @@ for _ in range(60):
     lo, hi = (mid, hi) if sum(curve(mid)) < 1000 else (lo, mid)
 market = lambda r: min(MAX, hi * r ** -0.6)
 lots = [{k: v for k, v in dict(id=p['id'], rk=p['rk'], n=p['n'], pos=p['pos'], age=p['age'], ht=p.get('ht'), espn=p.get('espn'),
-                               open=1, s=[p['s'].get(k) for k in ('g', 'mp', 'pts', 'reb', 'ast', 'stl', 'blk', 'fg', 'tp', 'ft')] if p.get('s') else None).items() if v is not None} for p in board]
+                               open=1, alt=None if p['n'].isascii() else p['n'].encode('utf-8').decode('mac_roman'), s=[p['s'].get(k) for k in ('g', 'mp', 'pts', 'reb', 'ast', 'stl', 'blk', 'fg', 'tp', 'ft')] if p.get('s') else None).items() if v is not None} for p in board]
 
 # ---- settings Andrew fills in when the real auction opens (see README "Auction") ----
 cfg = dict(
