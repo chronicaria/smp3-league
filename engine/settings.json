@@ -1,10 +1,14 @@
 {
- "_note": "Calibrated 2026-11-20 against ratings v3 (wider skill profiles) so league per-team averages match the real league. tools/league_avgs.py, rotation.py and extremes.py check it.",
+ "_note": "Calibrated 2026-11-20 against ratings v3 (wider skill profiles) so league per-team averages match the real league; second pass the same night added pace, free-throw accuracy, assists and home-court advantage. tools/league_avgs.py, rotation.py and extremes.py check it.",
  "threePointTendencyFactor": 1.22,
  "threePointAccuracyFactor": 0.975,
  "twoPointAccuracyFactor": 1.01,
  "turnoverFactor": 0.86,
  "foulRateFactor": 0.99,
  "blockFactor": 0.9,
- "stealFactor": 1.2
+ "stealFactor": 1.2,
+ "pace": 100.4,
+ "ftAccuracyFactor": 1.053,
+ "assistFactor": 1.03,
+ "homeCourtAdvantage": 0.5
 }

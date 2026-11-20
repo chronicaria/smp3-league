@@ -13,7 +13,7 @@ board = {p['id']: p for p in json.load(open(BOARD))}
 TEAMS = json.load(open(os.path.join(ROOT, 'engine/teams.json')))
 STAT = ['gs', 'min', 'pts', 'fg', 'fga', 'tp', 'tpa', 'ft', 'fta', 'orb', 'drb', 'ast', 'tov', 'stl', 'blk', 'pf', 'pm',
         'fgAtRim', 'fgaAtRim', 'fgLowPost', 'fgaLowPost', 'fgMidRange', 'fgaMidRange']
-teams = [dict(tid=i, abbrev=t['abbrev'], region=t['region'], name=t['name'], color=t['colors'][0], accent=t['accent'], logo=f"logos/{t['abbrev']}.png", owner=t['owner'], arena=t['arena'], banners=t.get('banners', [])) for i, t in enumerate(TEAMS)]
+teams = [dict(tid=i, abbrev=t['abbrev'], region=t['region'], name=t['name'], color=t['colors'][0], accent=t['accent'], logo=f"logos/{t['abbrev']}.png", arena=t['arena'], banners=t.get('banners', [])) for i, t in enumerate(TEAMS)]
 used = set(); games = []; day_of = {}
 for g in sorted((x for x in E['games'] if x['season'] == season), key=lambda x: x['gid']):
     h, a = g['teams']   # BBGM: teams[0] is home
