@@ -23,7 +23,7 @@ Preview: `python3 -m http.server 8795 --directory site`.
 
 ## Auction
 
-The Auction tab (`#auction`, `#auction-<ABBR>`) runs entirely in the browser: it reads a list of bids and applies the rules in `site/auction.js` (salary in whole $M, 1-5 years, score = salary x (1 + 0.25 x (years - 1)), $100M budget with $1M kept per open roster spot, 12 players, one deadline 48 hours after the start). `node tools/test_auction.mjs` checks the rules. `python3 tools/make_auction_data.py` rebuilds `site/data/auction.json` (the top 200 players with opening prices) and the demo bids.
+The Auction tab (`#auction`, `#auction-<ABBR>`) runs entirely in the browser: it reads a list of bids and applies the rules in `site/auction.js` (salary in whole $M, 1-5 years, score = salary x (1 + 0.25 x (years - 1)), $100M budget with $1M kept per open roster spot, 12 players, one deadline 48 hours after the start). `node tools/test_auction.mjs` checks the rules. `python3 tools/make_auction_data.py` rebuilds `site/data/auction.json` (the top 200 players; every player opens at $1M) and the demo bids.
 
 Until it is connected, the page shows made-up demo bids. To go live:
 

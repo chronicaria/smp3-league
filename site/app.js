@@ -126,12 +126,13 @@
     const img = p?.espn ? `<img src="https://a.espncdn.com/i/headshots/nba/players/full/${p.espn}.png" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;ini&quot;>${ini}</span>'">` : `<span class="ini">${ini}</span>`;
     return `<span class="face" style="width:${size}px;height:${size}px">${img}</span>`;
   }
+  const pface = (pid, size = 32) => { const p = P.get(pid), b = Math.max(14, Math.round(size * 0.4)); return `<span class="pf" style="width:${size}px;height:${size}px">${face(pid, size)}${p && p.tid >= 0 ? `<img class="fb" src="${team(p.tid).logo}" width="${b}" height="${b}" alt="">` : ''}</span>`; };
   const card = (title, body, meta = '', cls = '') => `<section class="card ${cls}"><div class="ch"><h2>${title}</h2>${meta}</div>${body}</section>`;
   const plink = (pid, text) => `<a href="#player-${pid}">${esc(text ?? P.get(pid)?.name)}</a>`;
   const tname = (tid) => `${esc(team(tid).region)} ${esc(team(tid).name)}`;
   const tlink = (tid, inner) => `<a href="#team-${team(tid).abbrev}">${inner}</a>`;
   const fin = (g) => `Final${g.ot ? `/${g.ot > 1 ? g.ot : ''}OT` : ''}`;
-  const lrow = (pid, s, v, i, sub) => `<a class="row r-lead${i ? '' : ' first'}" href="#player-${pid}"><span class="n">${i + 1}</span>${face(pid)}<span class="who"><b>${esc(P.get(pid).name)}</b><span>${sub ?? `${team(s.tid).abbrev} · ${P.get(pid).pos}`}</span></span><span class="v">${v}</span></a>`;
+  const lrow = (pid, s, v, i, sub) => `<a class="row r-lead${i ? '' : ' first'}" href="#player-${pid}"><span class="n">${i + 1}</span>${pface(pid)}<span class="who"><b>${esc(P.get(pid).name)}</b><span>${sub ?? `${team(s.tid).abbrev} · ${P.get(pid).pos}`}</span></span><span class="v">${v}</span></a>`;
   const line = (r) => `${r[C.pts]} pts, ${r[C.orb] + r[C.drb]} reb, ${r[C.ast]} ast`;
   const allRows = (g) => [...g.home.box.map((r) => [r, g.home.tid, g]), ...g.away.box.map((r) => [r, g.away.tid, g])];
 
@@ -161,7 +162,7 @@
   const topN = (f, n) => qualified().map(([pid, s]) => [pid, s, f(s, P.get(pid))]).filter((x) => x[2] > -90).sort((a, b) => b[2] - a[2]).slice(0, n);
   function injuryCard(tid, wide) {
     const out = D.players.filter((p) => p.inj && p.tid >= 0 && (tid == null || p.tid === tid)).sort((a, b) => b.inj[1] - a.inj[1]);
-    const rows = out.map((p) => `<a class="row r-news" href="#player-${p.pid}">${face(p.pid)}<span class="who"><b>${esc(p.name)}</b><span>${team(p.tid).abbrev} · ${esc(p.inj[0])}</span></span><span class="v" style="font-size:13px;font-weight:500">${p.inj[1]} g</span></a>`).join('');
+    const rows = out.map((p) => `<a class="row r-news" href="#player-${p.pid}">${pface(p.pid)}<span class="who"><b>${esc(p.name)}</b><span>${team(p.tid).abbrev} · ${esc(p.inj[0])}</span></span><span class="v" style="font-size:13px;font-weight:500">${p.inj[1]} g</span></a>`).join('');
     return card('Injury report', rows ? (wide ? `<div class="injgrid">${rows}</div>` : rows) : '<p class="note">Nobody is hurt.</p>', `<span>${out.length} out · games remaining</span>`);
   }
   function teamStatsTable() {
@@ -239,7 +240,7 @@
   function scoreRow(g) {
     const a = g.away, h = g.home, f = flow(g), qh = a.q.map((_, i) => (i < 4 ? i + 1 : 'OT'));
     const tr = (s, o) => `<tr class="${s.pts > o.pts ? 'won' : 'lost'}"><td class="t tm"><div class="tmw">${logo(s.tid, 30)}<span><b>${esc(team(s.tid).name)}</b><small>${recPl(s.tid)}</small></span></div></td>${s.q.map((x) => `<td>${x}</td>`).join('')}<td class="tt">${s.pts}</td></tr>`;
-    const top = (s) => { const r = s.box.reduce((x, y) => (gmsc(y) > gmsc(x) ? y : x)); return `<a class="tp" href="#player-${r[0]}">${face(r[0], 38)}<span><b>${esc(short(P.get(r[0]).name))}</b> <small>${P.get(r[0]).pos} · ${team(s.tid).abbrev}</small><em>${r[C.pts]} PTS, ${r[C.orb] + r[C.drb]} REB, ${r[C.ast]} AST${r[C.stl] >= 3 ? `, ${r[C.stl]} STL` : ''}${r[C.blk] >= 3 ? `, ${r[C.blk]} BLK` : ''}</em></span></a>`; };
+    const top = (s) => { const r = s.box.reduce((x, y) => (gmsc(y) > gmsc(x) ? y : x)); return `<a class="tp" href="#player-${r[0]}">${pface(r[0], 38)}<span><b>${esc(short(P.get(r[0]).name))}</b> <small>${P.get(r[0]).pos} · ${team(s.tid).abbrev}</small><em>${r[C.pts]} PTS, ${r[C.orb] + r[C.drb]} REB, ${r[C.ast]} AST${r[C.stl] >= 3 ? `, ${r[C.stl]} STL` : ''}${r[C.blk] >= 3 ? `, ${r[C.blk]} BLK` : ''}</em></span></a>`; };
     const t = (s, k) => tot(s, k), st = (lab, fa, fh) => `<tr><td>${fa}</td><th>${lab}</th><td>${fh}</td></tr>`;
     return `<section class="card grow" style="--away:${team(a.tid).accent};--home:${team(h.tid).accent}">
       <a class="gcell ls2" href="#game-${g.gid}"><table><thead><tr><th class="t">${g.ot ? (g.ot > 1 ? g.ot : '') + 'OT' : ''}</th>${qh.map((q) => `<th>${q}</th>`).join('')}<th>T</th></tr></thead><tbody>${tr(a, h)}${tr(h, a)}</tbody></table></a>
@@ -280,7 +281,7 @@
   function gameLeaders(g) {
     const best = (side, f) => side.box.reduce((a, r) => (f(r) > f(a) ? r : a), side.box[0]);
     const cats = [['Points', (r) => r[C.pts], (r) => `${r[C.fg]}/${r[C.fga]} FG, ${r[C.ft]}/${r[C.fta]} FT`], ['Rebounds', (r) => r[C.orb] + r[C.drb], (r) => `${r[C.drb]} DREB, ${r[C.orb]} OREB`], ['Assists', (r) => r[C.ast], (r) => `${r[C.tov]} TO, ${Math.round(r[C.min])} MIN`]];
-    const side = (s, f, ln, h) => { const r = best(s, f); return `<a class="p${h ? ' h' : ''}" href="#player-${r[0]}">${face(r[0], 40)}<b>${f(r)}</b><span class="nm1">${esc(short(P.get(r[0]).name))}</span><span class="ln1">${ln(r)}</span></a>`; };
+    const side = (s, f, ln, h) => { const r = best(s, f); return `<a class="p${h ? ' h' : ''}" href="#player-${r[0]}">${pface(r[0], 40)}<b>${f(r)}</b><span class="nm1">${esc(short(P.get(r[0]).name))}</span><span class="ln1">${ln(r)}</span></a>`; };
     return card('Game leaders', keys(g) + cats.map(([lab, f, ln]) => `<div class="lead">${side(g.away, f, ln, false)}<span class="lab">${lab}</span>${side(g.home, f, ln, true)}</div>`).join(''));
   }
   function gameTeamStats(g, f) {
@@ -317,12 +318,11 @@
   /* ---------- teams ---------- */
   function shotProfile(tid, roster) {
     const Z = [['Rim', 'fgAtRim', 'fgaAtRim'], ['Post', 'fgLowPost', 'fgaLowPost'], ['Mid', 'fgMidRange', 'fgaMidRange'], ['Three', 'tp', 'tpa']];
-    const lg = T.reduce((a, t) => { for (const k of SUM) a[k] += tstat[t.tid].me[k]; a.gp += tstat[t.tid].me.gp; return a; }, blank());
     const line = (label, s, g, cls = '') => { const fga = Math.max(1, s.fga);
       return `<div class="sp ${cls}"><span class="nm2">${label}</span><span class="n">${f1(s.fga / g)}</span><span class="mix">${Z.map(([, , a], i) => `<i class="z${i + 1}" style="width:${100 * s[a] / fga}%" title="${Z[i][0]}: ${(100 * s[a] / fga).toFixed(1)}% of shots"></i>`).join('')}</span>${Z.map(([, m, a], i) => `<span class="zc"><b>${(100 * s[a] / fga).toFixed(0)}%</b><small>${s[a] >= 5 ? pct(s[m], s[a]) : '—'}</small></span>`).join('')}</div>`; };
     const players = roster.filter(([, s]) => s && s.fga >= 10).sort((a, b) => b[1].fga / b[1].gp - a[1].fga / a[1].gp);
     return card('Shot profile', `<div class="sp head"><span class="nm2"></span><span class="n">FGA</span><span class="mix lg">${Z.map(([lab], i) => `<span><i class="sw z${i + 1}"></i>${lab}</span>`).join('')}</span>${Z.map(([lab]) => `<span class="zc"><b>${lab}</b><small>share · FG%</small></span>`).join('')}</div>
-      ${line(`${logo(tid, 20)}<b>${esc(team(tid).name)}</b>`, tstat[tid].me, gpT(tid), 'tot')}${line('<span class="muted">League average</span>', lg, lg.gp, 'tot')}
+      ${line(`${logo(tid, 20)}<b>${esc(team(tid).name)}</b>`, tstat[tid].me, gpT(tid), 'tot')}
       ${players.map(([p, s]) => line(`<a href="#player-${p.pid}">${face(p.pid, 26)}<span>${esc(p.name)}</span></a>`, s, s.gp)).join('')}`, '<span>Where the shots come from, per game</span>');
   }
   function teamPage(abbrev) {
@@ -336,18 +336,17 @@
     const prof = [['Points', (x) => tstat[x].me.pts / gpT(x), 0, f1], ['Points allowed', (x) => tstat[x].op.pts / gpT(x), 1, f1], ['Field goal %', (x) => 100 * tstat[x].me.fg / tstat[x].me.fga, 0, f1], ['Three point %', (x) => 100 * tstat[x].me.tp / tstat[x].me.tpa, 0, f1], ['Threes made', (x) => tstat[x].me.tp / gpT(x), 0, f1],
       ['Rebounds', (x) => tstat[x].me.reb / gpT(x), 0, f1], ['Assists', (x) => tstat[x].me.ast / gpT(x), 0, f1], ['Turnovers', (x) => tstat[x].me.tov / gpT(x), 1, f1], ['Steals', (x) => tstat[x].me.stl / gpT(x), 0, f1], ['Blocks', (x) => tstat[x].me.blk / gpT(x), 0, f1], ['Opp field goal %', (x) => 100 * tstat[x].op.fg / tstat[x].op.fga, 1, f1]];
     const profile = `<table><thead><tr><th class="t">Per game</th><th>Value</th><th>Rank</th></tr></thead><tbody>${prof.map(([lab, f, asc, fmt]) => { const rk = teamRank(tid, f, asc); return `<tr><td class="t" style="font-family:var(--f)">${lab}</td><td><b>${fmt(f(tid))}</b></td><td class="${rk <= 3 ? 'up' : rk >= 8 ? 'dn' : ''}">${ord(rk)}</td></tr>`; }).join('')}</tbody></table>`;
-    const share = roster.filter(([, s]) => s).sort((a, b) => b[1].pts - a[1].pts).slice(0, 8).map(([p, s]) => `<div class="hbar" style="--c:${t.accent}"><span class="t">${esc(short(p.name))}</span><span class="b"><i style="width:${100 * s.pts / m.pts * 2.2}%"></i></span><span class="v">${(100 * s.pts / m.pts).toFixed(1)}%</span></div>`).join('');
     const games = D.games.filter((g) => g.home.tid === tid || g.away.tid === tid).map((g) => { const hm = g.home.tid === tid, me = hm ? g.home : g.away, opp = hm ? g.away : g.home, w = me.pts > opp.pts, top = me.box.reduce((a, x) => (x[C.pts] > a[C.pts] ? x : a));
       return `<tr><td class="t"><a href="#game-${g.gid}">${g.day}</a></td><td class="t nm">${tlink(opp.tid, `${logo(opp.tid, 20)}<span>${hm ? 'vs' : '@'} ${esc(team(opp.tid).name)}</span>`)}</td><td class="t ${w ? 'up' : 'dn'}"><a href="#game-${g.gid}">${w ? 'W' : 'L'} ${me.pts}-${opp.pts}${g.ot ? ' OT' : ''}</a></td><td class="t" style="font-family:var(--f)">${plink(top[0], short(P.get(top[0]).name))} <span class="muted mono">${top[C.pts]}</span></td></tr>`; }).reverse();
     const next = D.schedule.filter((s) => s.home === tid || s.away === tid).slice(0, 5).map((s) => { const hm = s.home === tid, opp = hm ? s.away : s.home; return `<a class="row r-sched" href="#team-${team(opp).abbrev}"><span class="d">Game ${s.day}</span>${logo(opp, 20)}<span>${hm ? 'vs' : '@'} ${esc(team(opp).name)}</span><span class="res muted">${recStr(opp)}</span></a>`; }).join('');
     const tl = (lab, k, f = (s) => per(s, k)) => { const b = roster.filter(([, s]) => s && s.gp >= 3).sort((x, y) => f(y[1]) - f(x[1]))[0]; return b ? `<a class="row r-news" href="#player-${b[0].pid}">${face(b[0].pid)}<span class="who"><b>${esc(b[0].name)}</b><span>${lab}</span></span><span class="v">${f1(f(b[1]))}</span></a>` : ''; };
     const nm = (v, lab, rk) => `<div><b>${v}</b><span>${lab}</span>${rk ? `<small>${ord(rk)}</small>` : ''}</div>`;
-    $app.innerHTML = `<section class="card hd" style="--c:${t.accent}">${logo(tid, 96)}<div><h1>${tname(tid)}</h1><div class="sub"><span>${recStr(tid)} · ${ord(o.indexOf(tid) + 1)} of 10 · ${gb(tid, o[0])} GB</span><span class="form">${r.res.slice(-10).map((x) => `<i class="${x}">${x}</i>`).join('')}</span></div></div>
+    $app.innerHTML = `<section class="card hd" style="--c:${t.accent};--wm:url(${t.logo})">${logo(tid, 96)}<div><h1>${tname(tid)}</h1><div class="sub"><span>${recStr(tid)} · ${ord(o.indexOf(tid) + 1)} of 10 · ${gb(tid, o[0])} GB</span><span class="form">${r.res.slice(-10).map((x) => `<i class="${x}">${x}</i>`).join('')}</span></div></div>
       <div class="nums">${nm(f1(r.pf / gp), 'PF', teamRank(tid, (x) => rec[x].pf / gpT(x)))}${nm(f1(r.pa / gp), 'PA', teamRank(tid, (x) => rec[x].pa / gpT(x), 1))}${nm(sgn(diff(tid), 1), 'Diff', teamRank(tid, diff))}${nm(`${r.hw}-${r.hl}`, 'Home')}${nm(`${r.aw}-${r.al}`, 'Away')}${nm(oddsStr(tid), 'Playoffs')}${nm(pctStr(odds[tid].c), 'Title')}</div></section>
       ${card('Roster', `<div class="scroll"><table><thead><tr><th class="t">Player</th><th class="t">Pos</th><th>Age</th><th>Ht</th><th class="grp">GP</th><th>GS</th><th>MIN</th><th class="grp">PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th class="grp">FG%</th><th>3P%</th><th>FT%</th><th class="grp">+/-</th><th class="grp">Salary</th><th>Thru</th></tr></thead><tbody>${rows}</tbody></table></div>`, `<span>Starters above the line · payroll $${roster.reduce((a, [p]) => a + (p.sal || 0), 0)}M of $${D.cap}M cap</span>`)}
       <div style="margin-top:var(--gap)">${shotProfile(tid, roster)}</div>
-      <div class="grid g-main" style="margin-top:var(--gap)"><div class="stack">${card('Results', `<div class="scroll"><table><thead><tr><th class="t">Game</th><th class="t">Opponent</th><th class="t">Result</th><th class="t">Top scorer</th></tr></thead><tbody>${games.join('')}</tbody></table></div>`, `<span>${gp} games</span>`)}</div>
-      <aside class="stack">${card('Team leaders', tl('Points', 'pts') + tl('Rebounds', 'reb') + tl('Assists', 'ast') + tl('Steals', 'stl') + tl('Blocks', 'blk'))}${card('Team profile', profile, '<span>Rank of 10</span>')}${card('Scoring share', `<div style="padding:8px 0">${share}</div>`, '<span>Share of team points</span>')}${card('Next up', next || '<p class="note">Regular season complete.</p>')}${injuryCard(tid)}</aside></div>`;
+      <div class="grid g-main" style="margin-top:var(--gap)"><div class="stack">${card('Results', `<div class="scroll"><table><thead><tr><th class="t">Game</th><th class="t">Opponent</th><th class="t">Result</th><th class="t">Top scorer</th></tr></thead><tbody>${games.slice(0, 10).join('')}</tbody></table></div>`, `<span>Last ${Math.min(10, gp)} of ${gp}</span>`)}${card('Next up', next || '<p class="note">Regular season complete.</p>')}${injuryCard(tid)}</div>
+      <aside class="stack">${card('Team leaders', tl('Points', 'pts') + tl('Rebounds', 'reb') + tl('Assists', 'ast') + tl('Steals', 'stl') + tl('Blocks', 'blk'))}${card('Team profile', profile, '<span>Rank of 10</span>')}</aside></div>`;
   }
 
   /* ---------- leaders / players ---------- */
@@ -413,7 +412,7 @@
     const spark = pv.length > 1 ? `<svg class="spark" viewBox="0 0 ${pv.length * 20} 44" preserveAspectRatio="none">${pv.map((v, i) => `<rect x="${i * 20 + 3}" y="${44 - 40 * v / mx}" width="14" height="${40 * v / mx}" fill="${v >= avg ? (t ? t.accent : 'var(--gold)') : '#39414b'}"/>`).join('')}<line x1="0" x2="${pv.length * 20}" y1="${44 - 40 * avg / mx}" y2="${44 - 40 * avg / mx}" stroke="var(--ink)" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/></svg>` : '';
     const rk = (f) => { const r = rankOf(pid, f); return r ? `<small>${ord(r)}</small>` : '<small>&nbsp;</small>'; };
     const bio = [['Age', p.age], ['Size', `${htS(p.ht)}${p.wt ? `, ${p.wt} lbs` : ''}`], ['Contract', p.sal ? `$${p.sal}M / ${p.exp}` : null], ['Draft', p.smp ? `Round ${Math.ceil(p.smp / 10)} Pick ${((p.smp - 1) % 10) + 1}` : null]].filter((x) => x[1]);
-    $app.innerHTML = `<section class="card hd" style="--c:${t ? t.accent : '#555'}">${face(pid, 104)}<div><h1>${esc(p.name)}</h1><div class="sub">${t ? tlink(t.tid, `${logo(t.tid, 20)}${tname(t.tid)}`) : '<span>Free agent</span>'}<span>${p.pos}${p.num ? ` · #${esc(p.num)}` : ''}${p.rk ? ' · Rookie' : ''}</span>${p.inj ? `<span class="inj">${esc(p.inj[0])}, out ${p.inj[1]} games</span>` : ''}</div>
+    $app.innerHTML = `<section class="card hd" style="--c:${t ? t.accent : '#555'}${t ? `;--wm:url(${t.logo})` : ''}">${pface(pid, 104)}<div><h1>${esc(p.name)}</h1><div class="sub">${t ? tlink(t.tid, `${logo(t.tid, 20)}${tname(t.tid)}`) : '<span>Free agent</span>'}<span>${p.pos}${p.num ? ` · #${esc(p.num)}` : ''}${p.rk ? ' · Rookie' : ''}</span>${p.inj ? `<span class="inj">${esc(p.inj[0])}, out ${p.inj[1]} games</span>` : ''}</div>
       <div class="bio">${bio.map(([k, v]) => `<span>${k}</span><b>${esc(v)}</b>`).join('')}</div></div>
       ${s ? `<div class="nums2"><div class="nums"><div><b>${f1(per(s, 'pts'))}</b><span>PTS</span>${rk((x) => per(x, 'pts'))}</div><div><b>${f1(per(s, 'reb'))}</b><span>REB</span>${rk((x) => per(x, 'reb'))}</div><div><b>${f1(per(s, 'ast'))}</b><span>AST</span>${rk((x) => per(x, 'ast'))}</div><div><b>${f1(per(s, 'stl'))}</b><span>STL</span>${rk((x) => per(x, 'stl'))}</div><div><b>${f1(per(s, 'blk'))}</b><span>BLK</span>${rk((x) => per(x, 'blk'))}</div></div>
         <div class="nums sm"><div><b>${pct(s.fg, s.fga)}</b><span>FG%</span></div><div><b>${pct(s.tp, s.tpa)}</b><span>3P%</span></div><div><b>${pct(s.ft, s.fta)}</b><span>FT%</span></div>${p.adv ? `<div><b>${sgn(p.adv[6], 1)}</b><span>oBPM</span></div><div><b>${sgn(p.adv[7], 1)}</b><span>dBPM</span></div>` : ''}</div></div>` : ''}</section>
@@ -454,15 +453,15 @@
     const agg = (f) => rows.filter(f).reduce((t, r) => { t[0] += r[5]; t[1] += r[6]; t[2] += r[7]; return t; }, [0, 0, 0]);
     const net = ([sec, pf, pa]) => (pf - pa) / sec * 2880, ok = (x) => x[0] >= 30, has = (r, pid) => r.slice(0, 5).includes(+pid), nm = (pid) => esc(short(P.get(+pid).name)), last = (pid) => esc(P.get(pid).name.split(' ').slice(1).join(' ') || P.get(pid).name);
     const bar = (v, mx) => `<span class="dv"><i class="${v >= 0 ? 'p' : 'n'}" style="width:${50 * Math.abs(v) / mx}%"></i></span>`;
-    const units = [...rows].filter((r) => r[5] >= 120).sort((x, y) => y[5] - x[5]).slice(0, 15), mxU = Math.max(1, ...units.map((r) => Math.abs(net(r.slice(5)))));
+    const units = [...rows].filter((r) => r[5] >= 120).sort((x, y) => y[5] - x[5]).slice(0, 10), mxU = Math.max(1, ...units.map((r) => Math.abs(net(r.slice(5)))));
     $app.innerHTML = `<div class="page-h"><h1>Lineups</h1><span>Scoring margin per 48 minutes</span></div>
       <div class="tpick">${order().map((tid) => `<button type="button" data-lteam="${tid}" aria-pressed="${tid === LS.team}">${logo(tid, 30)}<span>${team(tid).abbrev}</span></button>`).join('')}</div>
       ${card('Most-used units', units.map((r) => { const x = r.slice(5), ps = r.slice(0, 5).sort((p, q) => (stats.get(q)?.min || 0) - (stats.get(p)?.min || 0));
-        return `<div class="row r-unit"><span class="faces">${ps.map((pid) => face(pid, 30)).join('')}</span><span class="who"><b>${ps.map(last).join(' · ')}</b><span>${Math.round(x[0] / 60)} min · scores ${f1(x[1] / x[0] * 2880)} · allows ${f1(x[2] / x[0] * 2880)}</span></span>${bar(net(x), mxU)}<span class="v ${net(x) >= 0 ? 'up' : 'dn'}">${sgn(net(x), 1)}</span></div>`; }).join('') || '<p class="note">No five-man unit has played two minutes together yet.</p>', `<span>${team(LS.team).abbrev} · ${rows.length} units used</span>`)}`;
+        return `<div class="row r-unit"><span class="faces">${ps.map((pid) => face(pid, 48)).join('')}</span><span class="who"><b>${ps.map(last).join(' · ')}</b><span>${Math.round(x[0] / 60)} min · scores ${f1(x[1] / x[0] * 2880)} · allows ${f1(x[2] / x[0] * 2880)}</span></span>${bar(net(x), mxU)}<span class="v ${net(x) >= 0 ? 'up' : 'dn'}">${sgn(net(x), 1)}</span></div>`; }).join('') || '<p class="note">No five-man unit has played two minutes together yet.</p>', `<span>${team(LS.team).abbrev} · ${rows.length} units used</span>`)}`;
     document.querySelectorAll('[data-lteam]').forEach((b) => b.addEventListener('click', () => { LS.team = +b.dataset.lteam; LS.a = LS.b = ''; lineupsPage(); }));
   }
   /* ---------- auction: computed in the browser from the published bid sheet ---------- */
-  let AU = null, auTimer = null; const AS = { q: '', only: '', open: null };
+  let AU = null, auTimer = null; const AS = { q: '', pos: '', st: '', led: '', view: 'list', sort: { k: 'rk', dir: 1 }, open: null, allBids: false };
   const POSN = ['PG', 'SG', 'SF', 'PF', 'C'];
   function parseCsv(text) {
     const rows = []; let row = [], cur = '', q = false;
@@ -498,51 +497,69 @@
     if (!AU) $app.innerHTML = '<p class="muted">Loading the auction…</p>';
     const { cfg, state, demo, byId } = await loadAuction();
     if (arg) return auctionTeam(arg);
-    const closed = Date.now() >= cfg.close, q = AS.q.toLowerCase(), bidLink = formUrl(cfg);
-    const tiles = [...T].sort((a, b) => a.region.localeCompare(b.region)).map((t) => { const s = state.teams[t.abbrev];
+    const closed = Date.now() >= cfg.close, q = AS.q.toLowerCase(), bidLink = formUrl(cfg), L = (l) => state.lots.get(l.id);
+    const byName = [...T].sort((a, b) => a.region.localeCompare(b.region));
+    const tiles = byName.map((t) => { const s = state.teams[t.abbrev];
       return `<a class="au-team" href="#auction-${t.abbrev}">${logo(t.tid, 38)}<span class="who"><b>${esc(t.name)}</b><span>${s.n}/${cfg.roster} players</span></span><span class="amt"><b>$${s.left}M</b><span>left</span></span><span class="meter"><i style="width:${100 * s.spent / cfg.budget}%;background:${t.accent}"></i></span></a>`; }).join('');
-    const recent = state.log.filter((b) => b.ok).slice(-10).reverse().map((b) => { const l = byId.get(b.pid);
-      return `<a class="row r-bid" href="#auction-${b.team}">${logo(tidOf(b.team), 22)}${lface(l, 30)}<span class="who"><b>${esc(l.n)}</b><span>${team(tidOf(b.team)).name} · ${ago(b.t)}</span></span><span class="v">${deal(b)}</span></a>`; }).join('');
-    const show = (l) => { const L = state.lots.get(l.id); return (!q || l.n.toLowerCase().includes(q)) && (!AS.only || (AS.only === 'open' ? !L.lead : L.lead && L.lead.team === AS.only)); };
-    const lot = (l) => { const L = state.lots.get(l.id), ld = L.lead, open = AS.open === l.id, espn = l.espn ? `https://www.espn.com/nba/player/_/id/${l.espn}` : null, bid = formUrl(cfg, l);
-      return `<div class="lot${open ? ' on' : ''}"><button type="button" class="lot-h" data-lot="${l.id}" aria-expanded="${open}"><span class="bd">${l.rk}</span>${lface(l, 36)}<span class="who"><b>${esc(l.n)}</b>${
-        ld ? `<span class="px">${logo(tidOf(ld.team), 16)}<b>$${ld.sal}M</b><small>× ${ld.yrs} · ${team(tidOf(ld.team)).abbrev}</small></span>` : `<span class="px none"><small>opens at</small><b>$${l.open}M</b></span>`}</span></button>${
-        open ? `<div class="lot-d"><p class="cap">${l.pos} · ${l.age} years old · ${htS(l.ht)} · #${l.rk} on the board</p>${L.history.length ? [...L.history].reverse().slice(0, 6).map((b, i) => `<div class="hb${i ? '' : ' top'}">${logo(tidOf(b.team), 18)}<span>${team(tidOf(b.team)).abbrev}</span><b>${deal(b)}</b><small>${ago(b.t)}</small></div>`).join('') + (L.history.length > 6 ? `<p class="cap">and ${L.history.length - 6} earlier bids</p>` : '') : `<p class="cap">No bids yet. The first must be worth at least $${l.open}M for one year.</p>`}
-          <div class="lot-a">${bid && !closed ? `<a class="btn go" href="${bid}" target="_blank" rel="noopener">Bid on ${esc(l.n.split(' ').slice(-1)[0])}</a>` : ''}${espn ? `<a class="btn" href="${espn}" target="_blank" rel="noopener">ESPN page ↗</a>` : ''}</div></div>` : ''}</div>`; };
-    const cols = POSN.map((pos) => { const xs = cfg.lots.filter((l) => l.pos === pos && show(l)); return card(pos, xs.map(lot).join('') || '<p class="note">Nobody matches.</p>', `<span>${xs.length}</span>`); }).join('');
-    const led = cfg.lots.filter((l) => state.lots.get(l.id).lead).length, money = Object.values(state.teams).reduce((a, s) => a + s.spent, 0);
+    const feed = (xs) => xs.map(([l, b, sub]) => `<a class="row r-bid" href="#auction-${b.team}">${logo(tidOf(b.team), 22)}${lface(l, 30)}<span class="who"><b>${esc(l.n)}</b><span>${sub}</span></span><span class="v">${deal(b)}</span></a>`).join('') || '<p class="note">No bids yet.</p>';
+    const recent = feed(state.log.filter((b) => b.ok).slice(-7).reverse().map((b) => [byId.get(b.pid), b, `${team(tidOf(b.team)).name} · ${ago(b.t)}`]));
+    const biggest = feed([...state.lots.values()].filter((x) => x.lead).sort((a, b) => b.lead.score - a.lead.score).slice(0, 5).map((x) => [x, x.lead, `${team(tidOf(x.lead.team)).name} · ${x.history.length} bid${x.history.length === 1 ? '' : 's'}`]));
+    const show = (l) => { const ld = L(l).lead; return (!q || l.n.toLowerCase().includes(q)) && (!AS.pos || l.pos === AS.pos) && (!AS.st || (AS.st === 'open' ? !ld : !!ld)) && (!AS.led || (ld && ld.team === AS.led)); };
+    const detail = (l) => { const x = L(l), espn = l.espn ? `https://www.espn.com/nba/player/_/id/${l.espn}` : null, bid = formUrl(cfg, l);
+      return `<div class="lot-d"><div class="hist">${x.history.length ? [...x.history].reverse().slice(0, 6).map((b, i) => `<div class="hb${i ? '' : ' top'}">${logo(tidOf(b.team), 18)}<span>${team(tidOf(b.team)).abbrev}</span><b>${deal(b)}</b><small>${ago(b.t)}</small></div>`).join('') + (x.history.length > 6 ? `<p class="cap">and ${x.history.length - 6} earlier bids</p>` : '') : '<p class="cap">No bids yet. Any offer of $1M or more takes the lead.</p>'}</div>
+        <div class="lot-a">${bid && !closed ? `<a class="btn go" href="${bid}" target="_blank" rel="noopener">Bid on ${esc(l.n.split(' ').slice(-1)[0])}</a>` : ''}${espn ? `<a class="btn" href="${espn}" target="_blank" rel="noopener">ESPN page ↗</a>` : ''}</div></div>`; };
+    const offer = (ld) => (ld ? `<span class="px">${logo(tidOf(ld.team), 18)}<b>$${ld.sal}M</b><small>× ${ld.yrs}</small></span>` : '<span class="px none"><small>No bids</small></span>');
+    const rows = cfg.lots.filter(show), SK = { rk: (l) => l.rk, n: (l) => l.n, pos: (l) => POSN.indexOf(l.pos), age: (l) => l.age, offer: (l) => (L(l).lead ? L(l).lead.score : 0), bids: (l) => L(l).history.length, last: (l) => (L(l).lead ? L(l).lead.t : 0) };
+    const sk = SK[AS.sort.k]; rows.sort((a, b) => { const x = sk(a), y = sk(b); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * AS.sort.dir || a.rk - b.rk; });
+    const th = (k, lab, cls = '') => `<th data-ak="${k}" class="${cls}${AS.sort.k === k ? ' on' : ''}">${lab}${AS.sort.k === k ? (AS.sort.dir < 0 ? ' ↓' : ' ↑') : ''}</th>`;
+    const list = `<div class="scroll"><table class="au-list"><thead><tr>${th('rk', '#', 't')}${th('n', 'Player', 't')}${th('pos', 'Pos', 't')}${th('age', 'Age')}<th>Ht</th>${th('offer', 'Best offer', 'grp')}${th('bids', 'Bids')}${th('last', 'Last bid')}<th class="grp"></th></tr></thead><tbody>${rows.map((l) => { const x = L(l), ld = x.lead, on = AS.open === l.id;
+      return `<tr class="lr${on ? ' on' : ''}" data-lot="${l.id}"><td class="t rk">${l.rk}</td><td class="t nm"><span class="pl">${lface(l, 40)}<span>${esc(l.n)}</span></span></td><td class="t"><span class="chip">${l.pos}</span></td><td>${l.age}</td><td>${htS(l.ht)}</td><td class="grp">${offer(ld)}</td><td>${x.history.length || '—'}</td><td class="muted">${ld ? ago(ld.t) : '—'}</td><td class="grp t"><span class="more2">${on ? 'Close' : 'Details'}</span></td></tr>${on ? `<tr class="ld"><td colspan="9">${detail(l)}</td></tr>` : ''}`; }).join('') || '<tr><td class="t muted" colspan="9">Nobody matches those filters.</td></tr>'}</tbody></table></div>`;
+    const lotCard = (l) => { const ld = L(l).lead, on = AS.open === l.id; return `<div class="lot${on ? ' on' : ''}"><button type="button" class="lot-h" data-lot="${l.id}" aria-expanded="${on}"><span class="bd">${l.rk}</span>${lface(l, 36)}<span class="who"><b>${esc(l.n)}</b>${offer(ld)}</span></button>${on ? detail(l) : ''}</div>`; };
+    const cols = `<div class="grid g-5">${POSN.map((pos) => { const xs = rows.filter((l) => l.pos === pos).sort((a, b) => a.rk - b.rk); return card(pos, xs.map(lotCard).join('') || '<p class="note">Nobody matches.</p>', `<span>${xs.length}</span>`); }).join('')}</div>`;
+    const led = cfg.lots.filter((l) => L(l).lead).length, money = Object.values(state.teams).reduce((a, s) => a + s.spent, 0);
+    const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([k, lab]) => `<button type="button" data-af="${key}" data-av="${k}" aria-pressed="${AS[key] === k}">${lab}</button>`).join('')}</div>`;
     $app.innerHTML = `<div class="au-head"><div><h1>Auction</h1><p class="lede2">Every team has <b>$${cfg.budget}M</b> to build a <b>${cfg.roster}</b>-man roster from the top ${cfg.lots.length} players on the board. Bid a salary and a length; the best offer when the clock runs out wins. Ratings are private, so do your own homework.</p></div>
         <div class="au-clock"><span class="label">${closed ? 'The auction is over' : 'Bidding closes in'}</span><b id="au-clock">${clockText(cfg)}</b><span class="cap">${led} of ${cfg.lots.length} players have a bid · $${money}M committed</span>${bidLink && !closed ? `<a class="btn go" href="${bidLink}" target="_blank" rel="noopener">Place a bid</a>` : ''}</div></div>
       ${demo ? '<p class="au-demo">Demo bids. These are made up to show how the page works; real bids appear here once the bid form is connected.</p>' : ''}
       <div class="au-teams">${tiles}</div>
-      <div class="grid g-main" style="margin-top:var(--gap)"><div class="stack">${card('How bids compare', `<div class="rules"><div><b>Salary × length.</b> An offer's value is the salary plus a quarter for every extra year: $10M for 3 years beats $14M for 1.</div><div><b>Whole millions, 1 to 5 years.</b> A new offer must beat the best one so far, or reach the opening price if there is none.</div><div><b>Stay inside $${cfg.budget}M.</b> Your leading bids, plus $1M for every roster spot still empty, cannot pass the budget. Get outbid and that money is yours again.</div><div><b>One deadline.</b> Everything closes together after ${cfg.hours} hours. A bid a second before it counts.</div></div>`)}${card('Biggest offers', [...state.lots.values()].filter((L) => L.lead).sort((a, b) => b.lead.score - a.lead.score).slice(0, 6).map((L, i) => `<a class="row r-bid${i ? '' : ' first'}" href="#auction-${L.lead.team}">${logo(tidOf(L.lead.team), 22)}${lface(L, 30)}<span class="who"><b>${esc(L.n)}</b><span>${team(tidOf(L.lead.team)).name} · ${L.history.length} bid${L.history.length === 1 ? '' : 's'}</span></span><span class="v">${deal(L.lead)}</span></a>`).join('') || '<p class="note">No bids yet.</p>', '<span>By salary × length</span>')}</div>
-        <aside class="stack">${card('Latest bids', recent || '<p class="note">No bids yet.</p>', `<span>${state.log.filter((b) => b.ok).length} accepted</span>`)}</aside></div>
-      <div class="tools" style="margin-top:22px"><input class="q" id="auq" type="search" placeholder="Search players" value="${esc(AS.q)}" aria-label="Search players"><div class="seg" role="group" aria-label="Show">${[['', 'All'], ['open', 'No bids yet']].map(([k, lab]) => `<button type="button" data-only="${k}" aria-pressed="${AS.only === k}">${lab}</button>`).join('')}</div>
-        <select class="q" id="auteam" aria-label="Led by"><option value="">Led by any team</option>${[...T].sort((a, b) => a.region.localeCompare(b.region)).map((t) => `<option value="${t.abbrev}"${AS.only === t.abbrev ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select></div>
-      <div class="grid g-5">${cols}</div>`;
+      <div class="grid g-main au-body"><div class="stack">
+        <div class="tools au-tools"><input class="q" id="auq" type="search" placeholder="Find a player" value="${esc(AS.q)}" aria-label="Find a player">${seg('pos', [['', 'All'], ...POSN.map((p) => [p, p])])}${seg('st', [['', 'Everyone'], ['open', 'No bids yet'], ['bid', 'Has a bid']])}
+          <select class="q" id="auteam" aria-label="Led by"><option value="">Led by anyone</option>${byName.map((t) => `<option value="${t.abbrev}"${AS.led === t.abbrev ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select><span class="sp2"></span>${seg('view', [['list', 'List'], ['pos', 'By position']])}</div>
+        ${AS.view === 'list' ? card('Best available', list, `<span>${rows.length} of ${cfg.lots.length} · ordered by ${{ rk: 'board rank', n: 'name', pos: 'position', age: 'age', offer: 'best offer', bids: 'bids', last: 'latest bid' }[AS.sort.k]}</span>`) : cols}</div>
+        <aside class="stack">${card('Latest bids', recent, `<span>${state.log.filter((b) => b.ok).length} accepted</span>`)}${card('Biggest offers', biggest, '<span>Salary × length</span>')}
+          ${card('How it works', `<div class="rules one"><div><b>Salary × length.</b> An offer is worth its salary plus a quarter for each extra year: $10M for 3 years beats $14M for 1.</div><div><b>Whole millions, 1 to 5 years, $1M minimum.</b> A new offer must beat the best one so far.</div><div><b>Stay inside $${cfg.budget}M.</b> Your leading bids plus $1M for every empty roster spot cannot pass the budget. Get outbid and the money is yours again.</div><div><b>One deadline.</b> Everything closes together after ${cfg.hours} hours. A bid one second before it counts.</div></div>`)}</aside></div>`;
     tick(cfg);
-    const inp = document.getElementById('auq');
-    inp.addEventListener('input', () => { AS.q = inp.value; auctionPage(); requestAnimationFrame(() => { const n = document.getElementById('auq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }); });
-    document.querySelectorAll('[data-only]').forEach((b) => b.addEventListener('click', () => { AS.only = b.dataset.only; auctionPage(); }));
-    document.getElementById('auteam').addEventListener('change', (e) => { AS.only = e.target.value; auctionPage(); });
-    document.querySelectorAll('[data-lot]').forEach((b) => b.addEventListener('click', () => { const y = scrollY; AS.open = AS.open === b.dataset.lot ? null : b.dataset.lot; auctionPage().then(() => scrollTo(0, y)); }));
+    const again = (keepFocus) => { const y = scrollY; auctionPage().then(() => { scrollTo(0, y); if (keepFocus) { const n = document.getElementById('auq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }); };
+    const inp = document.getElementById('auq'); inp.addEventListener('input', () => { AS.q = inp.value; again(true); });
+    document.querySelectorAll('[data-af]').forEach((b) => b.addEventListener('click', () => { AS[b.dataset.af] = b.dataset.av; again(); }));
+    document.getElementById('auteam').addEventListener('change', (e) => { AS.led = e.target.value; again(); });
+    document.querySelectorAll('[data-ak]').forEach((h) => h.addEventListener('click', () => { const k = h.dataset.ak; AS.sort = { k, dir: AS.sort.k === k ? -AS.sort.dir : ['rk', 'n', 'pos', 'age'].includes(k) ? 1 : -1 }; again(); }));
+    document.querySelectorAll('[data-lot]').forEach((b) => b.addEventListener('click', (e) => { if (e.target.closest('a')) return; AS.open = AS.open === b.dataset.lot ? null : b.dataset.lot; again(); }));
   }
 
   function auctionTeam(ab) {
     const { cfg, state, byId, demo } = AU, t = T.find((x) => x.abbrev === ab); if (!t) return notFound();
     const s = state.teams[ab], closed = Date.now() >= cfg.close, filled = closed ? SMPAuction.fill(cfg, state).filter((x) => x.team === ab) : [];
     const mine = [...s.players.map((id) => ({ l: byId.get(id), b: state.lots.get(id).lead })), ...filled.map((x) => ({ l: byId.get(x.pid), b: x, fill: true }))];
-    const col = (pos) => { const xs = mine.filter((x) => x.l.pos === pos).sort((a, b) => b.b.sal - a.b.sal || a.l.rk - b.l.rk);
-      return card(pos, xs.map((x, i) => `<div class="dc${i ? '' : ' first'}">${lface(x.l, i ? 40 : 64)}<b>${esc(x.l.n)}</b><span>${deal(x.b)}${x.fill ? ' · assigned' : ''}</span><small>#${x.l.rk} on the board${x.l.espn ? ` · <a href="https://www.espn.com/nba/player/_/id/${x.l.espn}" target="_blank" rel="noopener">ESPN ↗</a>` : ''}</small></div>`).join('') || '<div class="dc none"><span>Nobody yet</span></div>', `<span>${xs.length}</span>`); };
-    const log = state.log.filter((b) => b.team === ab).reverse().slice(0, 40).map((b) => `<tr><td class="t" style="font-family:var(--f)">${esc(b.name || '')}</td><td>${Number.isFinite(b.sal) ? `$${b.sal}M` : '—'}</td><td>${Number.isFinite(b.yrs) ? b.yrs : '—'}</td><td class="t ${b.ok ? 'up' : 'dn'}" style="font-family:var(--f)">${b.ok ? (state.lots.get(b.pid).lead.team === ab && state.lots.get(b.pid).lead.t === b.t ? 'Leading' : 'Outbid since') : esc(b.why)}</td><td>${ago(b.t)}</td></tr>`).join('');
-    const nm = (v, lab) => `<div><b>${v}</b><span>${lab}</span></div>`, bid = formUrl(cfg, null, ab);
-    $app.innerHTML = `<section class="card hd" style="--c:${t.accent}">${logo(t.tid, 96)}<div><h1>${tname(t.tid)}</h1><div class="sub"><span>${closed ? 'Final auction roster' : 'The roster if every leading bid holds'}</span></div>
-        <div class="sub" style="margin-top:10px"><a class="btn" href="#auction">← All players</a>${bid && !closed ? `<a class="btn go" href="${bid}" target="_blank" rel="noopener">Place a bid</a>` : ''}<a class="btn" href="#team-${ab}">Team page</a></div></div>
-        <div class="nums">${nm(`${s.n + filled.length}/${cfg.roster}`, 'Roster')}${nm(`$${s.spent + filled.reduce((a, x) => a + x.sal, 0)}M`, 'Committed')}${nm(`$${s.left}M`, 'Left')}${nm(closed ? '—' : `$${s.maxBid}M`, 'Most on one more')}</div></section>
+    const spent = mine.reduce((a, x) => a + x.b.sal, 0), open = cfg.roster - mine.length, free = cfg.budget - spent - open;
+    const tile = (x, star) => `<a class="dt${star ? ' star' : ''}" ${x.l.espn ? `href="https://www.espn.com/nba/player/_/id/${x.l.espn}" target="_blank" rel="noopener"` : ''}>${lface(x.l, star ? 56 : 44)}<b>${esc(x.l.n)}</b><span>${deal(x.b)}</span>${x.fill ? '<small>assigned</small>' : ''}</a>`;
+    const depth = POSN.map((pos) => { const xs = mine.filter((x) => x.l.pos === pos).sort((a, b) => b.b.sal - a.b.sal || a.l.rk - b.l.rk);
+      return `<div class="dl"><span class="dp">${pos}</span><div class="dts">${xs.map((x, i) => tile(x, !i)).join('') || '<span class="dn2">Nobody yet</span>'}</div></div>`; }).join('');
+    const seg = (w, c, lab) => (w > 0 ? `<i style="flex:${w};background:${c}" title="${lab}"></i>` : '');
+    const top = [...mine].sort((a, b) => b.b.sal - a.b.sal);
+    const budget = `<div class="bud"><div class="budbar">${top.map((x, i) => seg(x.b.sal, `color-mix(in srgb, ${t.accent} ${100 - i * 6}%, var(--surface))`, `${x.l.n} $${x.b.sal}M`)).join('')}${seg(open, 'var(--faint)', `$${open}M held for ${open} open spots`)}${seg(Math.max(0, free), 'var(--soft)', `$${Math.max(0, free)}M free`)}</div>
+      <div class="kv"><div><b>$${spent}M</b><span>Committed</span></div><div><b>$${open}M</b><span>Held for ${open} open spot${open === 1 ? '' : 's'}</span></div><div><b>$${Math.max(0, free)}M</b><span>Free to bid</span></div><div><b>${closed ? '—' : '$' + s.maxBid + 'M'}</b><span>Most on one player</span></div></div></div>`;
+    const status = (b) => (b.ok ? (state.lots.get(b.pid).lead.team === ab && state.lots.get(b.pid).lead.t === b.t ? ['Leading', 'up'] : ['Outbid', 'muted']) : [b.why, 'dn']);
+    const all = state.log.filter((b) => b.team === ab).reverse(), shown = AS.allBids ? all : all.slice(0, 8);
+    const bids = shown.map((b) => { const l = byId.get(b.pid), [txt, cls] = status(b); return `<div class="row r-mybid">${l ? lface(l, 30) : '<span class="face" style="width:30px;height:30px"></span>'}<span class="who"><b>${esc(l ? l.n : b.name || 'Unknown player')}</b><span class="${cls}">${esc(txt)}</span></span><span class="v">${Number.isFinite(b.sal) && Number.isFinite(b.yrs) ? deal(b) : '—'}</span><span class="n">${ago(b.t)}</span></div>`; }).join('') || '<p class="note">No bids yet.</p>';
+    const bid = formUrl(cfg, null, ab);
+    $app.innerHTML = `<section class="card hd" style="--c:${t.accent};--wm:url(${t.logo})">${logo(t.tid, 96)}<div><h1>${tname(t.tid)}</h1><div class="sub"><span>${closed ? 'Final auction roster' : 'The roster if every leading bid holds'}</span></div>
+        <div class="sub" style="margin-top:10px"><a class="btn" href="#auction">← All players</a>${bid && !closed ? `<a class="btn go" href="${bid}" target="_blank" rel="noopener">Place a bid</a>` : ''}</div></div>
+        <div class="nums"><div><b>${mine.length}/${cfg.roster}</b><span>Roster</span></div><div><b>$${spent}M</b><span>Committed</span></div><div><b>$${cfg.budget - spent}M</b><span>Left</span></div></div></section>
       ${demo ? '<p class="au-demo">Demo bids, made up to show how the page works.</p>' : ''}
-      <div class="page-h"><h1 style="font-size:20px">Depth chart</h1><span>By position, biggest contract first</span></div>
-      <div class="grid g-5">${POSN.map(col).join('')}</div>
-      <div style="margin-top:var(--gap)">${card('Bids', `<div class="scroll"><table><thead><tr><th class="t">Player</th><th>Salary</th><th>Years</th><th class="t">Status</th><th>When</th></tr></thead><tbody>${log || '<tr><td class="t muted" colspan="5">No bids yet.</td></tr>'}</tbody></table></div>`, `<span>${s.bids} placed · ${s.rejected} refused</span>`)}</div>`;
+      <div class="grid g-main"><div class="stack">${card('Depth chart', `<div class="depth">${depth}</div>`, '<span>Biggest contract first · click a player for his ESPN page</span>')}</div>
+        <aside class="stack">${card('Budget', budget, `<span>$${cfg.budget}M</span>`)}${card('Bids', bids + (all.length > 8 ? `<button type="button" class="btn wide" id="morebids">${AS.allBids ? 'Show fewer' : `Show all ${all.length}`}</button>` : ''), `<span>${s.bids} placed · ${s.rejected} refused</span>`)}</aside></div>`;
+    document.getElementById('morebids')?.addEventListener('click', () => { AS.allBids = !AS.allBids; const y = scrollY; auctionTeam(ab); scrollTo(0, y); });
   }
 
   const notFound = () => { $app.innerHTML = '<p class="muted">That page does not exist. <a href="#home">Back to the front page</a>.</p>'; };
