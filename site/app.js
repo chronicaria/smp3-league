@@ -47,6 +47,16 @@
     move = T.map((t) => po.indexOf(t.tid) - now.indexOf(t.tid));   // positive = climbed since the last game day
     odds = playoffOdds();
   }
+  let DIST = null;
+  const HK = { min: (s) => per(s, 'min'), pts: (s) => per(s, 'pts'), reb: (s) => per(s, 'reb'), ast: (s) => per(s, 'ast'), stl: (s) => per(s, 'stl'), blk: (s) => per(s, 'blk'), tov: (s) => per(s, 'tov'),
+    fgp: (s) => (s.fga >= 2 * s.gp ? s.fg / s.fga : null), tpp: (s) => (s.tpa >= s.gp ? s.tp / s.tpa : null), ftp: (s) => (s.fta >= s.gp ? s.ft / s.fta : null), pm: (s) => per(s, 'pm') };
+  const rankIn = (arr, v) => { let lo = 0, hi = 0; for (const y of arr) { if (y < v) lo++; if (y <= v) hi++; } return arr.length ? (lo + hi) / 2 / arr.length : 0.5; };
+  const tintOf = (p) => `background:color-mix(in srgb, var(--heat) ${(Math.max(0, p) * 46).toFixed(0)}%, transparent)`;
+  function heat(k, s, low) {   // style for a table cell: how a player's per-game number ranks among everyone who has played three games
+    DIST ??= Object.fromEntries(Object.keys(HK).map((key) => [key, [...stats.values()].filter((x) => x.gp >= 3).map(HK[key]).filter((v) => v != null)]));
+    const v = HK[k](s); if (v == null) return '';
+    const p = rankIn(DIST[k], v); return ` style="${tintOf(low ? 1 - p : p)}"`;
+  }
   const team = (tid) => T[tid];
   const gpT = (tid) => rec[tid].w + rec[tid].l;
   const recStr = (tid) => `${rec[tid].w}-${rec[tid].l}`;
@@ -78,10 +88,10 @@
     }
     return T.map((t) => ({ p: made[t.tid] / N, w: wins[t.tid] / N, c: champ[t.tid] / N }));
   }
-  const arrow = (tid) => (move[tid] > 0 ? `<span class="mv up">▲${move[tid]}</span>` : move[tid] < 0 ? `<span class="mv dn">▼${-move[tid]}</span>` : '<span class="mv"></span>');
+  const arrow = (tid) => (move[tid] > 0 ? `<span class="mv up">▲ ${move[tid]}</span>` : move[tid] < 0 ? `<span class="mv dn">▼ ${-move[tid]}</span>` : '<span class="mv"></span>');
   const recPl = (tid) => `${recStr(tid)} (${ord(order().indexOf(tid) + 1)})`;
-  const pctStr = (p) => (p > 0.995 ? '>99%' : p < 0.005 ? '<1%' : Math.round(100 * p) + '%');
-  const oddsStr = (tid) => { const p = odds[tid].p; return p > 0.995 ? '>99%' : p < 0.005 ? '<1%' : Math.round(100 * p) + '%'; };
+  const pctStr = (p) => (p > 0.9995 ? '>99.9%' : p < 0.0005 ? '<0.1%' : (100 * p).toFixed(1) + '%');
+  const oddsStr = (tid) => pctStr(odds[tid].p);
 
   /* game flow from the score timeline [sec, away, home] */
   function flow(g) {
@@ -146,12 +156,13 @@
     return card('Standings', `<table><thead><tr><th class="t">Team</th><th>W</th><th>L</th><th>GB</th><th>Playoffs</th><th>Title</th></tr></thead><tbody>${o.map((tid, i) =>
       `<tr${i === 3 ? ' class="cut"' : ''}><td class="t nm">${arrow(tid)}${tlink(tid, `${logo(tid, 20)}${esc(team(tid).name)}`)}</td><td>${rec[tid].w}</td><td>${rec[tid].l}</td><td>${gb(tid, o[0])}</td><td>${oddsStr(tid)}</td><td>${pctStr(odds[tid].c)}</td></tr>`).join('')}</tbody></table>`, '<a href="#standings">Full table</a>');
   }
-  const CATS = [['Points', 'PTS', (s) => per(s, 'pts')], ['Rebounds', 'REB', (s) => per(s, 'reb')], ['Assists', 'AST', (s) => per(s, 'ast')], ['Steals', 'STL', (s) => per(s, 'stl')], ['Blocks', 'BLK', (s) => per(s, 'blk')], ['Threes made', '3PM', (s) => per(s, 'tp')],
-    ['Field goal %', 'FG%', (s) => (s.fga >= 5 * s.gp ? 100 * s.fg / s.fga : -1)], ['Plus-minus', '+/-', (s) => per(s, 'pm')]];
-  const topN = (f, n) => qualified().map(([pid, s]) => [pid, s, f(s)]).filter((x) => x[2] > -1 || f === CATS[7][2]).sort((a, b) => b[2] - a[2]).slice(0, n);
-  function injuryCard(tid) {
+  const CATS = [['Points', 'PTS', (s) => per(s, 'pts')], ['Rebounds', 'REB', (s) => per(s, 'reb')], ['Assists', 'AST', (s) => per(s, 'ast')], ['Steals', 'STL', (s) => per(s, 'stl')], ['Blocks', 'BLK', (s) => per(s, 'blk')],
+    ['3-point %', '3P%', (s) => (s.tpa >= 3 * s.gp ? 100 * s.tp / s.tpa : -99)], ['Offensive BPM', 'oBPM', (s, p) => (p.adv ? p.adv[6] : -99)], ['Defensive BPM', 'dBPM', (s, p) => (p.adv ? p.adv[7] : -99)]];
+  const topN = (f, n) => qualified().map(([pid, s]) => [pid, s, f(s, P.get(pid))]).filter((x) => x[2] > -90).sort((a, b) => b[2] - a[2]).slice(0, n);
+  function injuryCard(tid, wide) {
     const out = D.players.filter((p) => p.inj && p.tid >= 0 && (tid == null || p.tid === tid)).sort((a, b) => b.inj[1] - a.inj[1]);
-    return card('Injury report', out.map((p) => `<a class="row r-news" href="#player-${p.pid}">${face(p.pid)}<span class="who"><b>${esc(p.name)}</b><span>${team(p.tid).abbrev} · ${esc(p.inj[0])}</span></span><span class="v mono" style="font-size:12px;font-weight:500">${p.inj[1]} g</span></a>`).join('') || '<p class="note">Nobody is hurt.</p>', `<span>${out.length} out</span>`);
+    const rows = out.map((p) => `<a class="row r-news" href="#player-${p.pid}">${face(p.pid)}<span class="who"><b>${esc(p.name)}</b><span>${team(p.tid).abbrev} · ${esc(p.inj[0])}</span></span><span class="v" style="font-size:13px;font-weight:500">${p.inj[1]} g</span></a>`).join('');
+    return card('Injury report', rows ? (wide ? `<div class="injgrid">${rows}</div>` : rows) : '<p class="note">Nobody is hurt.</p>', `<span>${out.length} out · games remaining</span>`);
   }
   function teamStatsTable() {
     const ma = (m, a, g) => `${f1(m / g)}-${f1(a / g)}`;
@@ -211,12 +222,13 @@
       <a class="gh" href="#game-${feat.gid}" style="display:block"><div class="gh-in">${blk(a, false, aw)}<div class="ls"><div class="sub">${f.changes} lead changes · ${f.ties} ties</div></div>${blk(h, true, !aw)}</div></a>
       <div class="wp" style="border-top:1px solid var(--line)">${wpChart(feat, f, 110)}</div>
       <div class="grid g-3" style="gap:0;border-top:1px solid var(--line)">${best.map(([r, tid]) => `<a class="row r-news" style="border-bottom:0" href="#player-${r[0]}">${face(r[0])}<span class="who"><b>${esc(short(P.get(r[0]).name))}</b><span>${team(tid).abbrev} · ${line(r)}</span></span><span></span></a>`).join('')}</div></section>`;
-    const lead3 = CATS.slice(0, 3).map(([lab, ab, fn]) => `<div class="ch" style="height:30px;background:var(--raise)"><h2 style="font-size:10.5px;color:var(--muted)">${lab}</h2></div>${topN(fn, 3).map(([pid, s, v], i) => lrow(pid, s, f1(v), i)).join('')}`).join('');
+    const lead3 = CATS.slice(0, 5).map(([lab, ab, fn]) => `<div class="ch" style="height:30px;background:var(--raise)"><h2 style="font-size:10.5px;color:var(--muted)">${lab}</h2></div>${topN(fn, 3).map(([pid, s, v], i) => lrow(pid, s, f1(v), i)).join('')}`).join('');
     $app.innerHTML = `${strip(lastDay)}
       <div class="grid g-main"><div class="stack">${recap()}${featured}
         <div class="grid g-2">${today.filter((g) => g !== feat).map(gameCard).join('')}</div>
         ${teamStatsTable()}</div>
-      <aside class="stack">${standingsMini()}${card('League leaders', lead3, '<a href="#leaders">All leaders</a>')}${injuryCard()}</aside></div>`;
+      <aside class="stack">${standingsMini()}${card('League leaders', lead3, '<a href="#leaders">All leaders</a>')}</aside></div>
+      <div style="margin-top:var(--gap)">${injuryCard(null, true)}</div>`;
   }
 
   /* ---------- scores ---------- */
@@ -270,10 +282,10 @@
   function gameTeamStats(g, f) {
     const a = g.away, h = g.home, A = (k) => tot(a, k), H = (k) => tot(h, k);
     const pr = (lab, m, at) => { const pa = A(at) ? 100 * A(m) / A(at) : 0, ph = H(at) ? 100 * H(m) / H(at) : 0;
-      return `<div class="ts"><div class="ts-top"><span class="v">${Math.round(pa)}%<small>${A(m)}-${A(at)}</small></span><span class="lab">${lab}</span><span class="v h"><small>${H(m)}-${H(at)}</small>${Math.round(ph)}%</span></div><div class="bars"><div class="track"><div class="fa" style="width:${pa}%"></div></div><div class="track h"><div class="fh" style="width:${ph}%"></div></div></div></div>`; };
-    const cr = (lab, va, vh, sfx = '') => `<div class="ts"><div class="ts-top"><span class="v">${va}${sfx}</span><span class="lab">${lab}</span><span class="v h">${vh}${sfx}</span></div><div class="split"><div class="fa" style="flex:${va || 0.01}"></div><div class="fh" style="flex:${vh || 0.01}"></div></div></div>`;
+      return `<div class="ts"><div class="ts-top"><span class="v">${pa.toFixed(1)}%<small>${A(m)}-${A(at)}</small></span><span class="lab">${lab}</span><span class="v h"><small>${H(m)}-${H(at)}</small>${ph.toFixed(1)}%</span></div><div class="bars"><div class="track"><div class="fa" style="width:${pa}%"></div></div><div class="track h"><div class="fh" style="width:${ph}%"></div></div></div></div>`; };
+    const cr = (lab, va, vh, sfx = '') => `<div class="ts"><div class="ts-top"><span class="v">${va}${sfx}</span><span class="lab">${lab}</span><span class="v h">${vh}${sfx}</span></div><div class="split"><div class="fa" style="flex:${+va || 0.01}"></div><div class="fh" style="flex:${+vh || 0.01}"></div></div></div>`;
     return card('Team stats', keys(g) + pr('Field goal %', 'fg', 'fga') + pr('Three point %', 'tp', 'tpa') + pr('Free throw %', 'ft', 'fta') + cr('Rebounds', A('orb') + A('drb'), H('orb') + H('drb')) + cr('Assists', A('ast'), H('ast')) + cr('Turnovers', A('tov'), H('tov')) + cr('Steals', A('stl'), H('stl')) + cr('Blocks', A('blk'), H('blk'))
-      + cr('Percent led', Math.round(100 * f.ledA / f.total), Math.round(100 * f.ledH / f.total), '%') + cr('Largest lead', f.bigA, f.bigH));
+      + cr('Percent led', (100 * f.ledA / f.total).toFixed(1), (100 * f.ledH / f.total).toFixed(1), '%') + cr('Largest lead', f.bigA, f.bigH));
   }
   function game(gid) {
     const g = byGid.get(gid); if (!g) return notFound();
@@ -281,7 +293,7 @@
     const qh = a.q.map((_, i) => (i < 4 ? i + 1 : `OT${i > 4 ? i - 3 : ''}`));
     const ls = `<table><thead><tr><th></th>${qh.map((q) => `<th>${q}</th>`).join('')}<th>T</th></tr></thead><tbody><tr><td class="t">${ta.abbrev}</td>${a.q.map((x) => `<td>${x}</td>`).join('')}<td>${a.pts}</td></tr><tr><td class="t">${th.abbrev}</td>${h.q.map((x) => `<td>${x}</td>`).join('')}<td>${h.pts}</td></tr></tbody></table>`;
     const blk = (s, home, won) => `<div class="gt${home ? ' h' : ''}">${tlink(s.tid, logo(s.tid, 76))}<div class="who"><b>${tlink(s.tid, tname(s.tid))}</b><span>${recStr(s.tid)} · ${home ? 'Home' : 'Away'}</span></div><span class="big ${won ? '' : 'lost'}">${s.pts}</span></div>`;
-    $app.innerHTML = `<div style="--away:${ta.accent};--home:${th.accent}"><section class="card gh" style="margin-bottom:var(--gap)"><div class="gh-in">${blk(a, false, aw)}<div class="ls">${ls}<div class="sub">Game ${g.day}${g.att ? ` · ${g.att.toLocaleString()} fans` : ''}</div></div>${blk(h, true, !aw)}</div></section>
+    $app.innerHTML = `<div style="--away:${ta.accent};--home:${th.accent}"><section class="card gh" style="margin-bottom:var(--gap)"><div class="gh-in">${blk(a, false, aw)}<div class="ls">${ls}<div class="sub">Game ${g.day}</div></div>${blk(h, true, !aw)}</div></section>
       <div class="grid g-game"><aside class="stack">${gameLeaders(g)}${gameTeamStats(g, f)}</aside><div class="stack">${wpCard(g, f)}${boxTable(a)}${boxTable(h)}</div></div></div>`;
     wireWp(g, f);
   }
@@ -299,11 +311,6 @@
   }
 
   /* ---------- teams ---------- */
-  function teams() {
-    const o = order();
-    $app.innerHTML = `<div class="page-h"><h1>Teams</h1><span>Ordered by record</span></div><div class="teams-grid">${o.map((tid, i) => { const t = team(tid), top = [...stats.entries()].filter(([, s]) => s.tid === tid).sort((a, b) => per(b[1], 'pts') - per(a[1], 'pts'))[0];
-      return `<a class="card tcard" style="--c:${t.accent}" href="#team-${t.abbrev}">${logo(tid, 88)}<b>${tname(tid)}</b><span>${recStr(tid)} · ${ord(i + 1)} · ${sgn(diff(tid), 1)}</span><span>${top ? `${esc(short(P.get(top[0]).name))} ${f1(per(top[1], 'pts'))} ppg` : ''}</span></a>`; }).join('')}</div>`;
-  }
   function teamPage(abbrev) {
     const t = T.find((x) => x.abbrev === abbrev); if (!t) return notFound();
     const tid = t.tid, o = order(), r = rec[tid], gp = gpT(tid), m = tstat[tid].me, op = tstat[tid].op;
@@ -311,31 +318,31 @@
     const starters = new Set(roster.filter(([, s]) => s).sort((a, b) => b[1].gs - a[1].gs || b[1].min - a[1].min).slice(0, 5).map(([p]) => p.pid));
     roster.sort((a, b) => starters.has(b[0].pid) - starters.has(a[0].pid));
     const rows = roster.map(([p, s], i) => `<tr${i === 4 ? ' class="cut"' : ''}><td class="t nm"><a href="#player-${p.pid}">${face(p.pid, 28)}<span>${esc(p.name)}</span>${p.inj ? `<span class="inj">out ${p.inj[1]}</span>` : ''}</a></td><td class="t"><span class="chip">${p.pos}</span></td><td>${p.age}</td><td>${htS(p.ht)}</td>${
-      s ? `<td class="grp">${s.gp}</td><td>${s.gs}</td><td>${f1(per(s, 'min'))}</td><td class="grp"><b>${f1(per(s, 'pts'))}</b></td><td>${f1(per(s, 'reb'))}</td><td>${f1(per(s, 'ast'))}</td><td>${f1(per(s, 'stl'))}</td><td>${f1(per(s, 'blk'))}</td><td>${f1(per(s, 'tov'))}</td><td class="grp">${pct(s.fg, s.fga)}</td><td>${pct(s.tp, s.tpa)}</td><td>${pct(s.ft, s.fta)}</td><td class="grp ${s.pm > 0 ? 'up' : 'dn'}">${sgn(per(s, 'pm'), 1)}</td>` : '<td colspan="13" class="grp muted" style="text-align:center">Has not played</td>'}<td class="grp">${p.sal ? '$' + p.sal + 'M' : '—'}</td><td>${p.exp || '—'}</td></tr>`).join('');
+      s ? `<td class="grp">${s.gp}</td><td>${s.gs}</td><td${heat('min', s)}>${f1(per(s, 'min'))}</td><td class="grp"${heat('pts', s)}><b>${f1(per(s, 'pts'))}</b></td><td${heat('reb', s)}>${f1(per(s, 'reb'))}</td><td${heat('ast', s)}>${f1(per(s, 'ast'))}</td><td${heat('stl', s)}>${f1(per(s, 'stl'))}</td><td${heat('blk', s)}>${f1(per(s, 'blk'))}</td><td${heat('tov', s, 1)}>${f1(per(s, 'tov'))}</td><td class="grp"${heat('fgp', s)}>${pct(s.fg, s.fga)}</td><td${heat('tpp', s)}>${pct(s.tp, s.tpa)}</td><td${heat('ftp', s)}>${pct(s.ft, s.fta)}</td><td class="grp"${heat('pm', s)}>${sgn(per(s, 'pm'), 1)}</td>` : '<td colspan="13" class="grp muted" style="text-align:center">Has not played</td>'}<td class="grp">${p.sal ? '$' + p.sal + 'M' : '—'}</td><td>${p.exp || '—'}</td></tr>`).join('');
     const prof = [['Points', (x) => tstat[x].me.pts / gpT(x), 0, f1], ['Points allowed', (x) => tstat[x].op.pts / gpT(x), 1, f1], ['Field goal %', (x) => 100 * tstat[x].me.fg / tstat[x].me.fga, 0, f1], ['Three point %', (x) => 100 * tstat[x].me.tp / tstat[x].me.tpa, 0, f1], ['Threes made', (x) => tstat[x].me.tp / gpT(x), 0, f1],
       ['Rebounds', (x) => tstat[x].me.reb / gpT(x), 0, f1], ['Assists', (x) => tstat[x].me.ast / gpT(x), 0, f1], ['Turnovers', (x) => tstat[x].me.tov / gpT(x), 1, f1], ['Steals', (x) => tstat[x].me.stl / gpT(x), 0, f1], ['Blocks', (x) => tstat[x].me.blk / gpT(x), 0, f1], ['Opp field goal %', (x) => 100 * tstat[x].op.fg / tstat[x].op.fga, 1, f1]];
     const profile = `<table><thead><tr><th class="t">Per game</th><th>Value</th><th>Rank</th></tr></thead><tbody>${prof.map(([lab, f, asc, fmt]) => { const rk = teamRank(tid, f, asc); return `<tr><td class="t" style="font-family:var(--f)">${lab}</td><td><b>${fmt(f(tid))}</b></td><td class="${rk <= 3 ? 'up' : rk >= 8 ? 'dn' : ''}">${ord(rk)}</td></tr>`; }).join('')}</tbody></table>`;
-    const share = roster.filter(([, s]) => s).sort((a, b) => b[1].pts - a[1].pts).slice(0, 8).map(([p, s]) => `<div class="hbar" style="--c:${t.accent}"><span class="t">${esc(short(p.name))}</span><span class="b"><i style="width:${100 * s.pts / m.pts * 2.2}%"></i></span><span class="v">${Math.round(100 * s.pts / m.pts)}%</span></div>`).join('');
+    const share = roster.filter(([, s]) => s).sort((a, b) => b[1].pts - a[1].pts).slice(0, 8).map(([p, s]) => `<div class="hbar" style="--c:${t.accent}"><span class="t">${esc(short(p.name))}</span><span class="b"><i style="width:${100 * s.pts / m.pts * 2.2}%"></i></span><span class="v">${(100 * s.pts / m.pts).toFixed(1)}%</span></div>`).join('');
     const games = D.games.filter((g) => g.home.tid === tid || g.away.tid === tid).map((g) => { const hm = g.home.tid === tid, me = hm ? g.home : g.away, opp = hm ? g.away : g.home, w = me.pts > opp.pts, top = me.box.reduce((a, x) => (x[C.pts] > a[C.pts] ? x : a));
-      return `<tr><td class="t"><a href="#game-${g.gid}">Game ${g.day}</a></td><td class="t nm">${tlink(opp.tid, `${logo(opp.tid, 20)}<span>${hm ? 'vs' : '@'} ${esc(team(opp.tid).name)}</span>`)}</td><td class="t ${w ? 'up' : 'dn'}"><a href="#game-${g.gid}">${w ? 'W' : 'L'} ${me.pts}-${opp.pts}${g.ot ? ' OT' : ''}</a></td><td class="t" style="font-family:var(--f)">${plink(top[0], short(P.get(top[0]).name))} <span class="muted mono">${top[C.pts]}</span></td></tr>`; }).reverse();
+      return `<tr><td class="t"><a href="#game-${g.gid}">${g.day}</a></td><td class="t nm">${tlink(opp.tid, `${logo(opp.tid, 20)}<span>${hm ? 'vs' : '@'} ${esc(team(opp.tid).name)}</span>`)}</td><td class="t ${w ? 'up' : 'dn'}"><a href="#game-${g.gid}">${w ? 'W' : 'L'} ${me.pts}-${opp.pts}${g.ot ? ' OT' : ''}</a></td><td class="t" style="font-family:var(--f)">${plink(top[0], short(P.get(top[0]).name))} <span class="muted mono">${top[C.pts]}</span></td></tr>`; }).reverse();
     const next = D.schedule.filter((s) => s.home === tid || s.away === tid).slice(0, 5).map((s) => { const hm = s.home === tid, opp = hm ? s.away : s.home; return `<a class="row r-sched" href="#team-${team(opp).abbrev}"><span class="d">Game ${s.day}</span>${logo(opp, 20)}<span>${hm ? 'vs' : '@'} ${esc(team(opp).name)}</span><span class="res muted">${recStr(opp)}</span></a>`; }).join('');
     const tl = (lab, k, f = (s) => per(s, k)) => { const b = roster.filter(([, s]) => s && s.gp >= 3).sort((x, y) => f(y[1]) - f(x[1]))[0]; return b ? `<a class="row r-news" href="#player-${b[0].pid}">${face(b[0].pid)}<span class="who"><b>${esc(b[0].name)}</b><span>${lab}</span></span><span class="v">${f1(f(b[1]))}</span></a>` : ''; };
     const nm = (v, lab, rk) => `<div><b>${v}</b><span>${lab}</span>${rk ? `<small>${ord(rk)}</small>` : ''}</div>`;
     $app.innerHTML = `<section class="card hd" style="--c:${t.accent}">${logo(tid, 96)}<div><h1>${tname(tid)}</h1><div class="sub"><span>${recStr(tid)} · ${ord(o.indexOf(tid) + 1)} of 10 · ${gb(tid, o[0])} GB</span><span class="form">${r.res.slice(-10).map((x) => `<i class="${x}">${x}</i>`).join('')}</span></div></div>
-      <div class="nums">${nm(f1(r.pf / gp), 'PPG', teamRank(tid, (x) => rec[x].pf / gpT(x)))}${nm(f1(r.pa / gp), 'Opp PPG', teamRank(tid, (x) => rec[x].pa / gpT(x), 1))}${nm(sgn(diff(tid), 1), 'Diff', teamRank(tid, diff))}${nm(`${r.hw}-${r.hl}`, 'Home')}${nm(`${r.aw}-${r.al}`, 'Away')}${nm(oddsStr(tid), 'Playoffs')}${nm(pctStr(odds[tid].c), 'Title')}</div></section>
+      <div class="nums">${nm(f1(r.pf / gp), 'PF', teamRank(tid, (x) => rec[x].pf / gpT(x)))}${nm(f1(r.pa / gp), 'PA', teamRank(tid, (x) => rec[x].pa / gpT(x), 1))}${nm(sgn(diff(tid), 1), 'Diff', teamRank(tid, diff))}${nm(`${r.hw}-${r.hl}`, 'Home')}${nm(`${r.aw}-${r.al}`, 'Away')}${nm(oddsStr(tid), 'Playoffs')}${nm(pctStr(odds[tid].c), 'Title')}</div></section>
       <div class="grid g-main"><div class="stack">
         ${card('Roster', `<div class="scroll"><table><thead><tr><th class="t">Player</th><th class="t">Pos</th><th>Age</th><th>Ht</th><th class="grp">GP</th><th>GS</th><th>MIN</th><th class="grp">PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th class="grp">FG%</th><th>3P%</th><th>FT%</th><th class="grp">+/-</th><th class="grp">Salary</th><th>Thru</th></tr></thead><tbody>${rows}</tbody></table></div>`, `<span>Starters above the line · payroll $${roster.reduce((a, [p]) => a + (p.sal || 0), 0)}M of $${D.cap}M cap</span>`)}
         ${card('Results', `<div class="scroll"><table><thead><tr><th class="t">Game</th><th class="t">Opponent</th><th class="t">Result</th><th class="t">Top scorer</th></tr></thead><tbody>${games.join('')}</tbody></table></div>`, `<span>${gp} games</span>`)}</div>
-      <aside class="stack">${card('Team leaders', tl('Points per game', 'pts') + tl('Rebounds per game', 'reb') + tl('Assists per game', 'ast') + tl('Steals per game', 'stl') + tl('Blocks per game', 'blk'))}${card('Team profile', profile, '<span>Rank of 10</span>')}${card('Scoring share', `<div style="padding:8px 0">${share}</div>`, '<span>Share of team points</span>')}${card('Next up', next || '<p class="note">Regular season complete.</p>')}${injuryCard(tid)}</aside></div>`;
+      <aside class="stack">${card('Team leaders', tl('Points', 'pts') + tl('Rebounds', 'reb') + tl('Assists', 'ast') + tl('Steals', 'stl') + tl('Blocks', 'blk'))}${card('Team profile', profile, '<span>Rank of 10</span>')}${card('Scoring share', `<div style="padding:8px 0">${share}</div>`, '<span>Share of team points</span>')}${card('Next up', next || '<p class="note">Regular season complete.</p>')}${injuryCard(tid)}</aside></div>`;
   }
 
   /* ---------- leaders / players ---------- */
   function leadersPage() {
     const best = D.games.flatMap(allRows).sort((x, y) => gmsc(y[0]) - gmsc(x[0])).slice(0, 10);
     $app.innerHTML = `<div class="page-h"><h1>Leaders</h1><span>Per game · at least ${Math.ceil(Math.max(3, lastDay * 0.4))} games played</span></div>
-      <div class="stack"><div class="grid g-4">${CATS.map(([lab, ab, f]) => card(lab, topN(f, 5).map(([pid, s, v], i) => lrow(pid, s, ab === '+/-' ? sgn(v, 1) : f1(v), i)).join(''), `<span>${ab}</span>`)).join('')}</div>
+      <div class="stack"><div class="grid g-4">${CATS.map(([lab, ab, f]) => card(lab, topN(f, 5).map(([pid, s, v], i) => lrow(pid, s, ab.endsWith('BPM') ? sgn(v, 1) : f1(v), i)).join(''), `<span>${ab}</span>`)).join('')}</div>
       ${card('Best single games', `<div class="scroll"><table><thead><tr><th class="t">#</th><th class="t">Player</th><th class="t">Game</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>FG</th><th>3PT</th><th>FT</th><th>Game score</th></tr></thead><tbody>${best.map(([r, tid, g], i) => { const hm = g.home.tid === tid, opp = hm ? g.away.tid : g.home.tid;
-        return `<tr><td class="t muted">${i + 1}</td><td class="t nm"><a href="#player-${r[0]}">${face(r[0], 26)}<span>${esc(P.get(r[0]).name)}</span></a></td><td class="t"><a href="#game-${g.gid}">Game ${g.day} · ${team(tid).abbrev} ${hm ? 'vs' : '@'} ${team(opp).abbrev}</a></td><td>${Math.round(r[C.min])}</td><td><b>${r[C.pts]}</b></td><td>${r[C.orb] + r[C.drb]}</td><td>${r[C.ast]}</td><td>${r[C.stl]}</td><td>${r[C.blk]}</td><td>${r[C.fg]}-${r[C.fga]}</td><td>${r[C.tp]}-${r[C.tpa]}</td><td>${r[C.ft]}-${r[C.fta]}</td><td><b>${f1(gmsc(r))}</b></td></tr>`; }).join('')}</tbody></table></div><p class="note">Game score is one number for a whole box-score line: points, shooting efficiency, rebounds, assists, steals and blocks count for a player, missed shots, turnovers and fouls against him.</p>`)}</div>`;
+        return `<tr><td class="t muted">${i + 1}</td><td class="t nm"><a href="#player-${r[0]}">${face(r[0], 26)}<span>${esc(P.get(r[0]).name)}</span></a></td><td class="t"><a href="#game-${g.gid}">${g.day}, ${team(tid).abbrev} ${hm ? 'vs' : '@'} ${team(opp).abbrev}</a></td><td>${Math.round(r[C.min])}</td><td><b>${r[C.pts]}</b></td><td>${r[C.orb] + r[C.drb]}</td><td>${r[C.ast]}</td><td>${r[C.stl]}</td><td>${r[C.blk]}</td><td>${r[C.fg]}-${r[C.fga]}</td><td>${r[C.tp]}-${r[C.tpa]}</td><td>${r[C.ft]}-${r[C.fta]}</td><td><b>${f1(gmsc(r))}</b></td></tr>`; }).join('')}</tbody></table></div><p class="note">Game score is one number for a whole box-score line: points, shooting efficiency, rebounds, assists, steals and blocks count for a player, missed shots, turnovers and fouls against him.</p>`)}</div>`;
   }
   const A = (i) => (s, p) => (p.adv ? p.adv[i] : -99);
   const PCOLS = [['gp', 'GP', (s) => s.gp, 0], ['min', 'MIN', (s) => per(s, 'min')], ['pts', 'PTS', (s) => per(s, 'pts')], ['reb', 'REB', (s) => per(s, 'reb')], ['ast', 'AST', (s) => per(s, 'ast')], ['stl', 'STL', (s) => per(s, 'stl')], ['blk', 'BLK', (s) => per(s, 'blk')], ['tov', 'TO', (s) => per(s, 'tov')],
@@ -380,20 +387,22 @@
     const agg = (xs) => xs.reduce((a, x) => add(a, x.r), blank());
     const statRow = (lab, a, tot) => (a.gp ? `<tr><td class="t" style="font-family:var(--f)">${lab}</td><td>${a.gp}</td><td>${tot ? Math.round(a.min) : f1(per(a, 'min'))}</td><td><b>${tot ? a.pts : f1(per(a, 'pts'))}</b></td><td>${tot ? a.reb : f1(per(a, 'reb'))}</td><td>${tot ? a.ast : f1(per(a, 'ast'))}</td><td>${tot ? a.stl : f1(per(a, 'stl'))}</td><td>${tot ? a.blk : f1(per(a, 'blk'))}</td><td>${tot ? a.tov : f1(per(a, 'tov'))}</td><td>${tot ? `${a.fg}-${a.fga}` : pct(a.fg, a.fga)}</td><td>${tot ? `${a.tp}-${a.tpa}` : pct(a.tp, a.tpa)}</td><td>${tot ? `${a.ft}-${a.fta}` : pct(a.ft, a.fta)}</td><td class="${a.pm > 0 ? 'up' : 'dn'}">${tot ? sgn(a.pm) : sgn(per(a, 'pm'), 1)}</td></tr>` : '');
     const sh = '<thead><tr><th class="t"></th><th>GP</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>FG</th><th>3P</th><th>FT</th><th>+/-</th></tr></thead>';
+    const LD = Object.fromEntries([['min', (r) => r[C.min]], ['pts', (r) => r[C.pts]], ['reb', (r) => r[C.orb] + r[C.drb]], ['ast', (r) => r[C.ast]], ['stl', (r) => r[C.stl]], ['blk', (r) => r[C.blk]], ['tov', (r) => r[C.tov]], ['gm', gmsc]].map(([k, f]) => [k, [f, played.map((x) => f(x.r))]]));
+    const lh = (k, r, low) => { const [f, arr] = LD[k], p = rankIn(arr, f(r)); return ` style="${tintOf(low ? 1 - p : p)}"`; };
     const logRows = [...log].reverse().map((x) => { const w = x.me.pts > x.op.pts, pre = `<td class="t"><a href="#game-${x.g.gid}">${x.g.day}</a></td><td class="t">${x.hm ? 'vs' : '@'} ${tlink(x.op.tid, team(x.op.tid).abbrev)}</td><td class="t ${w ? 'up' : 'dn'}">${w ? 'W' : 'L'} ${x.me.pts}-${x.op.pts}</td>`, r = x.r;
-      return r ? `<tr>${pre}<td>${Math.round(r[C.min])}</td><td><b>${r[C.pts]}</b></td><td>${r[C.orb] + r[C.drb]}</td><td>${r[C.ast]}</td><td>${r[C.stl]}</td><td>${r[C.blk]}</td><td>${r[C.tov]}</td><td>${r[C.fg]}-${r[C.fga]}</td><td>${r[C.tp]}-${r[C.tpa]}</td><td>${r[C.ft]}-${r[C.fta]}</td><td>${r[C.pf]}</td><td class="${r[C.pm] > 0 ? 'up' : r[C.pm] < 0 ? 'dn' : ''}">${sgn(r[C.pm])}</td><td>${f1(gmsc(r))}</td></tr>` : `<tr>${pre}<td colspan="13" class="muted" style="text-align:center;font-size:12px">DNP - ${esc(x.dnp.toUpperCase())}</td></tr>`; }).join('');
+      return r ? `<tr>${pre}<td class="grp"${lh('min', r)}>${Math.round(r[C.min])}</td><td${lh('pts', r)}><b>${r[C.pts]}</b></td><td${lh('reb', r)}>${r[C.orb] + r[C.drb]}</td><td${lh('ast', r)}>${r[C.ast]}</td><td${lh('stl', r)}>${r[C.stl]}</td><td${lh('blk', r)}>${r[C.blk]}</td><td${lh('tov', r, 1)}>${r[C.tov]}</td><td class="grp">${r[C.fg]}-${r[C.fga]}</td><td>${r[C.tp]}-${r[C.tpa]}</td><td>${r[C.ft]}-${r[C.fta]}</td><td>${r[C.pf]}</td><td class="grp ${r[C.pm] > 0 ? 'up' : r[C.pm] < 0 ? 'dn' : ''}">${sgn(r[C.pm])}</td><td${lh('gm', r)}>${f1(gmsc(r))}</td></tr>` : `<tr>${pre}<td colspan="13" class="grp muted" style="text-align:center;font-size:12px">DNP - ${esc(x.dnp.toUpperCase())}</td></tr>`; }).join('');
     const hi = [['Points', (r) => r[C.pts]], ['Rebounds', (r) => r[C.orb] + r[C.drb]], ['Assists', (r) => r[C.ast]], ['Steals', (r) => r[C.stl]], ['Blocks', (r) => r[C.blk]], ['Threes', (r) => r[C.tp]], ['Minutes', (r) => Math.round(r[C.min])], ['Game score', (r) => +gmsc(r).toFixed(1)]]
       .map(([lab, f]) => { const b = played.reduce((a, x) => (!a || f(x.r) > f(a.r) ? x : a), null); return b ? `<a class="row r-sched" style="grid-template-columns:minmax(0,1fr) auto auto" href="#game-${b.g.gid}"><span>${lab}</span><span class="d">Game ${b.g.day} ${b.hm ? 'vs' : '@'} ${team(b.op.tid).abbrev}</span><span class="v" style="font:700 14px var(--m);min-width:38px;text-align:right">${f(b.r)}</span></a>` : ''; }).join('');
-    const zones = s ? ZONES.map(([lab, m, a]) => `<tr><td class="t" style="font-family:var(--f)">${lab}</td><td>${s[m]}-${s[a]}</td><td><b>${pct(s[m], s[a])}</b></td><td>${Math.round(100 * s[a] / Math.max(1, s.fga))}%</td><td style="width:38%"><div class="hbar" style="grid-template-columns:1fr;padding:0;--c:${t ? t.accent : 'var(--gold)'}"><span class="b"><i style="width:${100 * s[a] / Math.max(1, s.fga)}%"></i></span></div></td></tr>`).join('') : '';
+    const zones = s ? ZONES.map(([lab, m, a]) => `<tr><td class="t" style="font-family:var(--f)">${lab}</td><td>${s[m]}-${s[a]}</td><td><b>${pct(s[m], s[a])}</b></td><td>${(100 * s[a] / Math.max(1, s.fga)).toFixed(1)}%</td><td style="width:38%"><div class="hbar" style="grid-template-columns:1fr;padding:0;--c:${t ? t.accent : 'var(--gold)'}"><span class="b"><i style="width:${100 * s[a] / Math.max(1, s.fga)}%"></i></span></div></td></tr>`).join('') : '';
     const vs = [...new Set(played.map((x) => x.op.tid))].map((o) => [o, agg(played.filter((x) => x.op.tid === o))]).sort((a, b) => per(b[1], 'pts') - per(a[1], 'pts'));
     const pv = played.map((x) => x.r[C.pts]), mx = Math.max(1, ...pv), avg = s ? per(s, 'pts') : 0;
     const spark = pv.length > 1 ? `<svg class="spark" viewBox="0 0 ${pv.length * 20} 44" preserveAspectRatio="none">${pv.map((v, i) => `<rect x="${i * 20 + 3}" y="${44 - 40 * v / mx}" width="14" height="${40 * v / mx}" fill="${v >= avg ? (t ? t.accent : 'var(--gold)') : '#39414b'}"/>`).join('')}<line x1="0" x2="${pv.length * 20}" y1="${44 - 40 * avg / mx}" y2="${44 - 40 * avg / mx}" stroke="var(--ink)" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/></svg>` : '';
     const rk = (f) => { const r = rankOf(pid, f); return r ? `<small>${ord(r)}</small>` : '<small>&nbsp;</small>'; };
-    const bio = [['Age', p.age], ['Height', htS(p.ht)], ['Weight', p.wt ? p.wt + ' lb' : null], ['Contract', p.sal ? `$${p.sal}M through ${p.exp}` : null], ['SMP draft', p.smp ? `${Math.ceil(p.smp / 10)}.${String(((p.smp - 1) % 10) + 1).padStart(2, '0')}` : null]].filter((x) => x[1]);
+    const bio = [['Age', p.age], ['Size', `${htS(p.ht)}${p.wt ? `, ${p.wt} lbs` : ''}`], ['Contract', p.sal ? `$${p.sal}M / ${p.exp}` : null], ['Draft', p.smp ? `Round ${Math.ceil(p.smp / 10)} Pick ${((p.smp - 1) % 10) + 1}` : null]].filter((x) => x[1]);
     $app.innerHTML = `<section class="card hd" style="--c:${t ? t.accent : '#555'}">${face(pid, 104)}<div><h1>${esc(p.name)}</h1><div class="sub">${t ? tlink(t.tid, `${logo(t.tid, 20)}${tname(t.tid)}`) : '<span>Free agent</span>'}<span>${p.pos}${p.num ? ` · #${esc(p.num)}` : ''}${p.rk ? ' · Rookie' : ''}</span>${p.inj ? `<span class="inj">${esc(p.inj[0])}, out ${p.inj[1]} games</span>` : ''}</div>
       <div class="bio">${bio.map(([k, v]) => `<span>${k}</span><b>${esc(v)}</b>`).join('')}</div></div>
       ${s ? `<div class="nums2"><div class="nums"><div><b>${f1(per(s, 'pts'))}</b><span>PTS</span>${rk((x) => per(x, 'pts'))}</div><div><b>${f1(per(s, 'reb'))}</b><span>REB</span>${rk((x) => per(x, 'reb'))}</div><div><b>${f1(per(s, 'ast'))}</b><span>AST</span>${rk((x) => per(x, 'ast'))}</div><div><b>${f1(per(s, 'stl'))}</b><span>STL</span>${rk((x) => per(x, 'stl'))}</div><div><b>${f1(per(s, 'blk'))}</b><span>BLK</span>${rk((x) => per(x, 'blk'))}</div></div>
-        <div class="nums sm"><div><b>${pct(s.fg, s.fga)}</b><span>FG%</span></div><div><b>${pct(s.tp, s.tpa)}</b><span>3P%</span></div><div><b>${pct(s.ft, s.fta)}</b><span>FT%</span></div>${p.adv ? `<div><b>${sgn(p.adv[6] + p.adv[7], 1)}</b><span>BPM</span></div>` : ''}</div></div>` : ''}</section>
+        <div class="nums sm"><div><b>${pct(s.fg, s.fga)}</b><span>FG%</span></div><div><b>${pct(s.tp, s.tpa)}</b><span>3P%</span></div><div><b>${pct(s.ft, s.fta)}</b><span>FT%</span></div>${p.adv ? `<div><b>${sgn(p.adv[6], 1)}</b><span>oBPM</span></div><div><b>${sgn(p.adv[7], 1)}</b><span>dBPM</span></div>` : ''}</div></div>` : ''}</section>
       ${s ? `<div class="grid g-main"><div class="stack">
         ${card('Season stats', `<div class="scroll"><table>${sh}<tbody>${statRow('Per game', s)}${statRow('Totals', s, true)}</tbody></table></div>${p.adv ? `<div class="kv"><div><b>${sgn(p.adv[6], 1)}</b><span>OBPM</span></div><div><b>${sgn(p.adv[7], 1)}</b><span>DBPM</span></div><div><b>${sgn(p.adv[6] + p.adv[7], 1)}</b><span>BPM</span></div><div><b>${p.adv[0]}</b><span>PER</span></div><div><b>${p.adv[1].toFixed(1)}</b><span>Win shares</span></div><div><b>${p.adv[3]}%</b><span>Usage</span></div></div>` : ''}`, `<span>${D.season} · ${s.gs} starts</span>`)}
         ${card('Game log', `<div class="scroll"><table><thead><tr><th class="t">Game</th><th class="t">Opp</th><th class="t">Result</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>FG</th><th>3PT</th><th>FT</th><th>PF</th><th>+/-</th><th>GmSc</th></tr></thead><tbody>${logRows}</tbody></table></div>`, `<span>${played.length} played · ${log.length - played.length} missed</span>`)}</div>
@@ -412,11 +421,14 @@
       <p class="note" style="padding:10px 0 0">The number is the player's rank on the league draft board. Asking prices will appear once the auction sets the league's salary scale.</p>`;
   }
   function draftPage() {
-    const o = order().reverse(), rows = D.draft.map((p, i) => [p, i + 1]).filter(([p]) => !FS.dr || p.pos === FS.dr);
-    $app.innerHTML = `<div class="page-h"><h1>${D.draftYear} draft</h1><span>${D.draft.length} prospects · one round, ten picks</span></div>${posSeg(FS.dr, 'dr')}
-      <div class="grid g-main"><div class="stack">${card('Prospects', `<div class="scroll"><table><thead><tr><th class="t">Rank</th><th class="t">Prospect</th><th class="t">Pos</th><th>Age</th><th>Ht</th><th class="t">School</th></tr></thead><tbody>${rows.map(([p, n]) => `<tr${n === 10 && !FS.dr ? ' class="cut"' : ''}><td class="t muted">${n}</td><td class="t nm">${esc(p.name)}</td><td class="t"><span class="chip">${p.pos}</span></td><td>${p.age}</td><td>${htS(p.ht)}</td><td class="t" style="font-family:var(--f)">${esc(p.col || '—')}</td></tr>`).join('')}</tbody></table></div><p class="note">Rank is the league's scouting order. The line marks the end of the round: only ten prospects are drafted each year.</p>`, '<span>Scouting order</span>')}</div>
-      <aside class="stack">${card('Order if the season ended today', o.map((tid, i) => `<a class="row r-sched" style="grid-template-columns:28px 20px minmax(0,1fr) auto" href="#team-${team(tid).abbrev}"><span class="d">${i + 1}</span>${logo(tid, 20)}<span>${esc(team(tid).name)}</span><span class="res muted">${recStr(tid)}</span></a>`).join('') + '<p class="note">Reverse order of the standings. The lottery rules are not set yet.</p>', '<span>One round</span>')}</aside></div>`;
-    wirePos(draftPage);
+    const o = order().reverse(), ht2 = (p) => `${p.age} · ${htS(p.ht)}${p.col ? ` · ${esc(p.col)}` : ''}`;
+    const pick = (tid, i) => { const p = D.draft[i]; return `<div class="pk"><span class="no">${i + 1}</span>${tlink(tid, logo(tid, 40))}<span class="who"><b>${esc(p.name)}</b><span>${p.pos} · ${ht2(p)}</span></span><span class="tm">${tlink(tid, esc(team(tid).name))}<small>${recStr(tid)}</small></span></div>`; };
+    const col = ([code, label]) => { const xs = D.draft.map((p, i) => [p, i + 1]).filter(([p, n]) => p.pos === code && n > 10);
+      return card(code, xs.map(([p, n]) => `<div class="row r-fa" style="grid-template-columns:30px minmax(0,1fr)"><span class="bd">${n}</span><span class="who"><b>${esc(p.name)}</b><span>${ht2(p)}</span></span></div>`).join('') || '<p class="note">None left.</p>', `<span>${label} · ${xs.length}</span>`); };
+    $app.innerHTML = `<div class="page-h"><h1>${D.draftYear} draft</h1><span>One round, ten picks</span></div>
+      ${card('If the draft were today', `<div class="pks">${o.map(pick).join('')}</div><p class="note">Teams pick in reverse order of the standings (the lottery rules are not set yet), each taking the best prospect left on the league's scouting board.</p>`, '<span>Projected first round</span>')}
+      <div class="page-h" style="margin-top:22px"><h1 style="font-size:20px">Best of the rest</h1><span>${D.draft.length - 10} more prospects by position · number is scouting rank</span></div>
+      <div class="grid g-5">${[['PG', 'Point guards'], ['SG', 'Shooting guards'], ['SF', 'Small forwards'], ['PF', 'Power forwards'], ['C', 'Centers']].map(col).join('')}</div>`;
   }
   /* ---------- lineups: on/off for one or two players, and the five-man units ---------- */
   let LU = null; const LS = { team: null, a: '', b: '' };
@@ -427,38 +439,24 @@
     if (!ids.includes(+LS.a)) LS.a = ''; if (!ids.includes(+LS.b)) LS.b = '';
     const agg = (f) => rows.filter(f).reduce((t, r) => { t[0] += r[5]; t[1] += r[6]; t[2] += r[7]; return t; }, [0, 0, 0]);
     const net = ([sec, pf, pa]) => (pf - pa) / sec * 2880, ok = (x) => x[0] >= 30, has = (r, pid) => r.slice(0, 5).includes(+pid), nm = (pid) => esc(short(P.get(+pid).name)), last = (pid) => esc(P.get(pid).name.split(' ').slice(1).join(' ') || P.get(pid).name);
-    const tint = (v) => `background:color-mix(in srgb, var(${v >= 0 ? '--up' : '--bad'}) ${Math.min(42, 6 + Math.abs(v) * 2.2)}%, var(--surface))`;
-    const tile = (lab, x) => (ok(x) ? `<div class="lt" style="${tint(net(x))}"><span class="label">${lab}</span><b class="${net(x) >= 0 ? 'up' : 'dn'}">${sgn(net(x), 1)}</b><span class="cap">${Math.round(x[0] / 60)} min · scores ${f1(x[1] / x[0] * 2880)} · allows ${f1(x[2] / x[0] * 2880)}</span></div>`
-      : `<div class="lt"><span class="label">${lab}</span><b class="muted">—</b><span class="cap">Under a minute together</span></div>`);
-    const sel = [LS.a, LS.b].filter(Boolean);
-    const result = !sel.length ? `<div class="lhint">Pick a player below to see ${esc(team(LS.team).name)} with him on and off the floor. Pick a second to see all four combinations.</div>`
-      : sel.length === 1 ? `<div class="lgrid two">${tile(`With ${nm(LS.a)}`, agg((r) => has(r, LS.a)))}${tile(`Without ${nm(LS.a)}`, agg((r) => !has(r, LS.a)))}</div>`
-      : `<div class="lgrid mx"><span></span><span class="axis">${nm(LS.b)} on</span><span class="axis">${nm(LS.b)} off</span>
-          <span class="axis v">${nm(LS.a)} on</span>${tile('Both on', agg((r) => has(r, LS.a) && has(r, LS.b)))}${tile(`Only ${nm(LS.a)}`, agg((r) => has(r, LS.a) && !has(r, LS.b)))}
-          <span class="axis v">${nm(LS.a)} off</span>${tile(`Only ${nm(LS.b)}`, agg((r) => !has(r, LS.a) && has(r, LS.b)))}${tile('Neither', agg((r) => !has(r, LS.a) && !has(r, LS.b)))}</div>`;
     const onoff = ids.map((pid) => [pid, agg((r) => has(r, pid)), agg((r) => !has(r, pid))]).filter((x) => x[1][0] >= 600 && x[2][0] >= 300).map(([pid, on, off]) => [pid, on, off, net(on) - net(off)]).sort((x, y) => y[3] - x[3]);
     const mxS = Math.max(1, ...onoff.map((x) => Math.abs(x[3]))), bar = (v, mx) => `<span class="dv"><i class="${v >= 0 ? 'p' : 'n'}" style="width:${50 * Math.abs(v) / mx}%"></i></span>`;
-    const units = [...rows].filter((r) => r[5] >= 240).sort((x, y) => y[5] - x[5]).slice(0, 8), mxU = Math.max(1, ...units.map((r) => Math.abs(net(r.slice(5)))));
+    const units = [...rows].filter((r) => r[5] >= 120).sort((x, y) => y[5] - x[5]).slice(0, 15), mxU = Math.max(1, ...units.map((r) => Math.abs(net(r.slice(5)))));
     $app.innerHTML = `<div class="page-h"><h1>Lineups</h1><span>Scoring margin per 48 minutes</span></div>
       <div class="tpick">${order().map((tid) => `<button type="button" data-lteam="${tid}" aria-pressed="${tid === LS.team}">${logo(tid, 30)}<span>${team(tid).abbrev}</span></button>`).join('')}</div>
-      <section class="card" style="margin-bottom:var(--gap)"><div class="ch"><h2>${logo(LS.team, 20)}${tname(LS.team)}</h2><span>${sel.length ? `${sel.map(nm).join(' + ')} · <a href="#lineups" id="lclear">clear</a>` : 'Pick up to two players'}</span></div>
-        <div class="lres">${result}</div>
-        <div class="ptiles">${ids.map((pid) => `<button type="button" class="ptile" data-lp="${pid}" aria-pressed="${sel.includes(String(pid))}">${face(pid, 34)}<span><b>${last(pid)}</b><small>${P.get(pid).pos} · ${Math.round((stats.get(pid)?.min || 0))} min</small></span></button>`).join('')}</div></section>
       <div class="grid g-2">${card('On/off swing', onoff.map(([pid, on, off, d]) => `<a class="row r-swing" href="#player-${pid}">${face(pid, 30)}<span class="who"><b>${esc(P.get(pid).name)}</b><span>on ${sgn(net(on), 1)} · off ${sgn(net(off), 1)}</span></span>${bar(d, mxS)}<span class="v ${d >= 0 ? 'up' : 'dn'}">${sgn(d, 1)}</span></a>`).join(''), '<span>On minus off</span>')}
       ${card('Most-used units', units.map((r) => { const x = r.slice(5), ps = r.slice(0, 5).sort((p, q) => (stats.get(q)?.min || 0) - (stats.get(p)?.min || 0));
-        return `<div class="row r-unit"><span class="faces">${ps.map((pid) => face(pid, 30)).join('')}</span><span class="who"><b>${ps.map(last).join(' · ')}</b><span>${Math.round(x[0] / 60)} min · scores ${f1(x[1] / x[0] * 2880)} · allows ${f1(x[2] / x[0] * 2880)}</span></span>${bar(net(x), mxU)}<span class="v ${net(x) >= 0 ? 'up' : 'dn'}">${sgn(net(x), 1)}</span></div>`; }).join('') || '<p class="note">No five-man unit has played four minutes together yet.</p>', `<span>${rows.length} units used</span>`)}</div>`;
+        return `<div class="row r-unit"><span class="faces">${ps.map((pid) => face(pid, 30)).join('')}</span><span class="who"><b>${ps.map(last).join(' · ')}</b><span>${Math.round(x[0] / 60)} min · scores ${f1(x[1] / x[0] * 2880)} · allows ${f1(x[2] / x[0] * 2880)}</span></span>${bar(net(x), mxU)}<span class="v ${net(x) >= 0 ? 'up' : 'dn'}">${sgn(net(x), 1)}</span></div>`; }).join('') || '<p class="note">No five-man unit has played two minutes together yet.</p>', `<span>${rows.length} units used</span>`)}</div>`;
     document.querySelectorAll('[data-lteam]').forEach((b) => b.addEventListener('click', () => { LS.team = +b.dataset.lteam; LS.a = LS.b = ''; lineupsPage(); }));
-    document.querySelectorAll('[data-lp]').forEach((b) => b.addEventListener('click', () => { const p = b.dataset.lp; if (LS.a === p) { LS.a = LS.b; LS.b = ''; } else if (LS.b === p) LS.b = ''; else if (!LS.a) LS.a = p; else if (!LS.b) LS.b = p; else { LS.a = LS.b; LS.b = p; } lineupsPage(); }));
-    document.getElementById('lclear')?.addEventListener('click', (e) => { e.preventDefault(); LS.a = LS.b = ''; lineupsPage(); });
   }
   const notFound = () => { $app.innerHTML = '<p class="muted">That page does not exist. <a href="#home">Back to the front page</a>.</p>'; };
 
   /* ---------- router ---------- */
   function route() {
     const h = location.hash.slice(1) || 'home', i = h.indexOf('-'), kind = i < 0 ? h : h.slice(0, i), arg = i < 0 ? '' : h.slice(i + 1);
-    const nav = { home: 'home', scores: 'scores', game: 'scores', standings: 'standings', teams: 'teams', team: 'teams', leaders: 'leaders', players: 'players', player: 'players', freeagents: 'freeagents', draft: 'draft', lineups: 'lineups', recap: 'home' }[kind];
+    const nav = { home: 'home', scores: 'scores', game: 'scores', standings: 'standings', leaders: 'leaders', players: 'players', player: 'players', freeagents: 'freeagents', draft: 'draft', lineups: 'lineups', recap: 'home' }[kind];
     document.querySelectorAll('[data-nav]').forEach((a) => (a.dataset.nav === nav ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
-    ({ home, scores: () => scores(+arg), game: () => game(+arg), standings, teams, team: () => teamPage(arg), player: () => player(+arg), leaders: leadersPage, players: playersPage, freeagents: freeAgents, draft: draftPage, lineups: lineupsPage, recap: () => recapPage(+arg) }[kind] || notFound)();
+    ({ home, scores: () => scores(+arg), game: () => game(+arg), standings, team: () => teamPage(arg), player: () => player(+arg), leaders: leadersPage, players: playersPage, freeagents: freeAgents, draft: draftPage, lineups: lineupsPage, recap: () => recapPage(+arg) }[kind] || notFound)();
     window.scrollTo(0, 0);
   }
 
