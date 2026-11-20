@@ -37,15 +37,18 @@ for ev in E['events']:
 def adv(p):
     st = [x for x in p.get('stats', []) if x['season'] == season and not x['playoffs']]
     if not st or not st[-1].get('gp'): return None
-    x = st[-1]; return [round(x['per'], 1), round(x['ows'] + x['dws'], 2), round(x['dws'], 2), round(x['usgp'], 1), round(x['ewa'], 2), round(x['vorp'], 2)]
+    x = st[-1]; return [round(x['per'], 1), round(x['ows'] + x['dws'], 2), round(x['dws'], 2), round(x['usgp'], 1), round(x['ewa'], 2), round(x['vorp'], 2), round(x['obpm'], 1), round(x['dbpm'], 1)]
+# Salaries: the prototype still carries real contracts, which sum to about twice the league's $100M cap. Scale them so the
+# league's total payroll is 10 x $100M and round to $1M; the auction will replace them with real SMP contracts.
+PAY = 100000 * len(TEAMS) / sum(p['contract']['amount'] for p in E['players'] if p['tid'] >= 0)
 players = []
 for p in E['players']:
     if p['tid'] < 0 and p['pid'] not in used: continue
     b = board.get(p.get('srID'), {}); inj = p.get('injury') or {}; d = p.get('draft') or {}
     players.append({k: v for k, v in dict(pid=p['pid'], name=f"{p['firstName']} {p['lastName']}".strip(), tid=p['tid'], pos=b.get('pos') or p['ratings'][-1]['pos'],
         age=season - p['born']['year'], ht=p.get('hgt'), wt=p.get('weight'), espn=b.get('espn'), num=p.get('jerseyNumber'),
-        born=p['born'].get('loc'), col=p.get('college') or None, rk=True if d.get('year') == season - 1 else None, so=True if d.get('year') == season - 2 and d.get('round') == 1 else None,
-        sal=round(p['contract']['amount'] / 1000, 1) if p['tid'] >= 0 else None, exp=p['contract']['exp'] if p['tid'] >= 0 else None,
+        rk=True if d.get('year') == season - 1 else None, so=True if d.get('year') == season - 2 and d.get('round') == 1 else None,
+        sal=max(1, round(p['contract']['amount'] * PAY / 1000)) if p['tid'] >= 0 else None, exp=p['contract']['exp'] if p['tid'] >= 0 else None,
         ls=[b['s'][k] for k in ('pts', 'reb', 'ast', 'g')] if b.get('s') else None, adv=adv(p),
         smp=pick.get(p['pid']), inj=[('Injury' if inj['type'] == 'Injured' else inj['type']), inj['gamesRemaining']] if inj.get('gamesRemaining') else None).items() if v is not None})
 # free agents: the 150 best by draft-board order, with last season's line (no ratings, no asking price yet)
@@ -92,7 +95,7 @@ def fit_wp():
 wp = fit_wp()
 lineups = {tid: [[*map(int, k.split(',')), round(v[0]), v[1], v[2]] for k, v in d.items() if v[0] >= 20] for tid, d in LINE.items()}
 sched = [dict(gid=s['gid'], day=s['day'], home=s['homeTid'], away=s['awayTid']) for s in E['schedule'] if s['homeTid'] >= 0]
-out = dict(season=f"{season - 1}–{str(season)[2:]}", total=180, cols=STAT, teams=teams, players=players, games=games, schedule=sched, news=news, fa=fa, draft=draft, draftYear=season, wp=wp)
+out = dict(season=f"{season - 1}–{str(season)[2:]}", total=180, cols=STAT, teams=teams, players=players, games=games, schedule=sched, news=news, fa=fa, draft=draft, draftYear=season, wp=wp, cap=100)
 s = json.dumps(out, separators=(',', ':'), ensure_ascii=False)
 for bad in ('"nba"', 'NBA', '"ovr"', '"skills"', '"ratings"', '"value"', '"pot"'): assert bad not in s, bad
 os.makedirs(os.path.join(ROOT, 'site/data'), exist_ok=True)

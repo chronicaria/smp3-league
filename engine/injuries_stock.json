@@ -1,0 +1,292 @@
+[
+{
+"name": "Sprained Ankle",
+"frequency": 1520.0,
+"games": 6.41
+},
+{
+"name": "Sore Knee",
+"frequency": 809.0,
+"games": 6.52
+},
+{
+"name": "Sore Back",
+"frequency": 566.0,
+"games": 4.51
+},
+{
+"name": "Strained Hamstring",
+"frequency": 529.0,
+"games": 8.3
+},
+{
+"name": "Strained Calf",
+"frequency": 454.0,
+"games": 8.48
+},
+{
+"name": "Sore Ankle",
+"frequency": 375.0,
+"games": 4.44
+},
+{
+"name": "Strained Groin",
+"frequency": 354.0,
+"games": 5.44
+},
+{
+"name": "Sore Foot",
+"frequency": 305.0,
+"games": 6.31
+},
+{
+"name": "Sore Hip",
+"frequency": 302.0,
+"games": 5.57
+},
+{
+"name": "Bruised Knee",
+"frequency": 261.0,
+"games": 6.16
+},
+{
+"name": "Sprained Knee",
+"frequency": 248.0,
+"games": 11.73
+},
+{
+"name": "Concussion",
+"frequency": 198.0,
+"games": 4.19
+},
+{
+"name": "Sore Achilles",
+"frequency": 182.0,
+"games": 4.44
+},
+{
+"name": "Back Spasms",
+"frequency": 168.0,
+"games": 3.9
+},
+{
+"name": "Bruised Hip",
+"frequency": 160.0,
+"games": 3.42
+},
+{
+"name": "Sore Shoulder",
+"frequency": 150.0,
+"games": 6.89
+},
+{
+"name": "Bruised Quadriceps",
+"frequency": 145.0,
+"games": 3.97
+},
+{
+"name": "Patellar Tendinitis",
+"frequency": 145.0,
+"games": 5.61
+},
+{
+"name": "Sprained Toe",
+"frequency": 130.0,
+"games": 7.0
+},
+{
+"name": "Sprained Foot",
+"frequency": 120.0,
+"games": 6.9
+},
+{
+"name": "Bruised Leg",
+"frequency": 116.0,
+"games": 3.78
+},
+{
+"name": "Sprained Wrist",
+"frequency": 114.0,
+"games": 7.78
+},
+{
+"name": "Bruised Back",
+"frequency": 111.0,
+"games": 5.18
+},
+{
+"name": "Sprained Thumb",
+"frequency": 103.0,
+"games": 5.65
+},
+{
+"name": "Sprained Shoulder",
+"frequency": 89.0,
+"games": 7.89
+},
+{
+"name": "Plantar Fasciitis",
+"frequency": 86.0,
+"games": 6.28
+},
+{
+"name": "Fractured Hand",
+"frequency": 83.0,
+"games": 14.75
+},
+{
+"name": "Bruised Foot",
+"frequency": 79.0,
+"games": 6.7
+},
+{
+"name": "Fractured Finger",
+"frequency": 68.0,
+"games": 10.94
+},
+{
+"name": "Sore Quadriceps",
+"frequency": 62.0,
+"games": 4.38
+},
+{
+"name": "Bruised Hand",
+"frequency": 50.0,
+"games": 3.95
+},
+{
+"name": "Fractured Nose",
+"frequency": 50.0,
+"games": 6.25
+},
+{
+"name": "Strained Quadriceps",
+"frequency": 50.0,
+"games": 7.66
+},
+{
+"name": "Bruised Shoulder",
+"frequency": 48.0,
+"games": 6.92
+},
+{
+"name": "Sore Elbow",
+"frequency": 43.0,
+"games": 6.8
+},
+{
+"name": "Strained Abdomen",
+"frequency": 43.0,
+"games": 9.51
+},
+{
+"name": "Torn ACL",
+"frequency": 43.0,
+"games": 111.0
+},
+{
+"name": "Sprained Elbow",
+"frequency": 41.0,
+"games": 7.67
+},
+{
+"name": "Sore Wrist",
+"frequency": 41.0,
+"games": 6.76
+},
+{
+"name": "Fractured Ankle",
+"frequency": 39.0,
+"games": 27.06
+},
+{
+"name": "Fractured Foot",
+"frequency": 39.0,
+"games": 33.9
+},
+{
+"name": "Strained Neck",
+"frequency": 39.0,
+"games": 6.63
+},
+{
+"name": "Sore Toe",
+"frequency": 39.0,
+"games": 2.49
+},
+{
+"name": "Torn Meniscus",
+"frequency": 39.0,
+"games": 29.03
+},
+{
+"name": "Sore Hand",
+"frequency": 37.0,
+"games": 3.6
+},
+{
+"name": "Sprained Hand",
+"frequency": 36.0,
+"games": 7.08
+},
+{
+"name": "Strained Oblique",
+"frequency": 36.0,
+"games": 7.92
+},
+{
+"name": "Rib Contusion",
+"frequency": 32.0,
+"games": 3.67
+},
+{
+"name": "Sprained Finger",
+"frequency": 32.0,
+"games": 7.92
+},
+{
+"name": "Torn Achilles Tendon",
+"frequency": 23.0,
+"games": 111.0
+},
+{
+"name": "Sore Neck",
+"frequency": 22.0,
+"games": 5.31
+},
+{
+"name": "Bruised Eye",
+"frequency": 18.0,
+"games": 1.35
+},
+{
+"name": "Fractured Rib",
+"frequency": 18.0,
+"games": 9.53
+},
+{
+"name": "Herniated Disc",
+"frequency": 18.0,
+"games": 18.82
+},
+{
+"name": "Sore Thumb",
+"frequency": 18.0,
+"games": 5.4
+},
+{
+"name": "Bruised Elbow",
+"frequency": 16.0,
+"games": 1.99
+},
+{
+"name": "Ankle Contusion",
+"frequency": 14.0,
+"games": 5.59
+},
+{
+"name": "Fractured Toe",
+"frequency": 9.0,
+"games": 12.28
+}
+]

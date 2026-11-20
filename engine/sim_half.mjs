@@ -9,6 +9,11 @@ import { exportLeague } from "./export.mjs";
 const [zengmDir, secretFile, outFile, half = "18"] = process.argv.slice(2);
 const { _note, ...CAL } = JSON.parse(fs.readFileSync(new URL("./settings.json", import.meta.url)));
 const GA = { ...CAL, ...JSON.parse(process.env.GA || "{}") };   // calibrated league settings, overridable for experiments
+// A 36-game season is 36/82 of a real one, so an injury should cost the same share of a season: each injury lasts
+// 36/82 as many games and injuries happen 82/36 as often per game. Injuries carried in from the real-player file shrink the same way.
+const SEASON = 36 / 82;
+const INJURIES = JSON.parse(fs.readFileSync(new URL("./injuries_stock.json", import.meta.url))).map((x) => ({ ...x, games: Math.max(0.5, +(x.games * SEASON).toFixed(2)) }));
+const CAP = 100000;   // $100M salary cap (BBGM stores thousands); every contract scales with it and rounds to $1M
 const TEAMS = JSON.parse(fs.readFileSync(new URL("./teams.json", import.meta.url)));
 const secret = new Map(JSON.parse(fs.readFileSync(secretFile)).players.map((p) => [p.id, p.ratings]));
 const tmp = path.resolve("data/.league-init.json");
@@ -21,19 +26,23 @@ const teams = L.teams.slice(0, 10).map((t, tid) => ({ ...t, tid, cid: 0, did: 0,
 let swapped = 0;
 const players = L.players.map((p) => {
 	const q = { ...p, tid: p.tid >= 0 ? -1 : p.tid };
+	if (q.injury?.gamesRemaining) q.injury = { ...q.injury, gamesRemaining: Math.max(1, Math.round(q.injury.gamesRemaining * SEASON)) };
+	if (q.contract) q.contract = { ...q.contract, amount: Math.max(1000, Math.round(q.contract.amount * CAP / L.gameAttributes.salaryCap / 1000) * 1000) };
 	const r = secret.get(p.srID);
 	if (r && q.ratings?.length && process.env.RATINGS !== "public") { q.ratings = q.ratings.map((x, i, a) => (i === a.length - 1 ? { ...x, ...r, ovr: undefined, pot: undefined, skills: undefined } : x)); swapped++; }
 	return q;
 });
 const ga = { ...L.gameAttributes }; delete ga.numGamesConf; delete ga.numGamesDiv;
 Object.assign(ga, { confs: [{ cid: 0, name: "SMP" }], divs: [{ did: 0, cid: 0, name: "SMP" }], numGames: 36, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, draftType: "noLottery", numDraftRounds: 1, ...GA });
+const money = { salaryCap: CAP, minPayroll: 60000, luxuryPayroll: 115000, minContract: 1000, maxContract: 33000, salaryCapType: "soft" };
+Object.assign(ga, money, { injuries: INJURIES, injuryRate: 0.000125 / SEASON });
 const file = { version: L.version, startingSeason: L.startingSeason, gameAttributes: ga, teams, players, draftPicks: [] };
 fs.mkdirSync(path.dirname(tmp), { recursive: true }); fs.writeFileSync(tmp, JSON.stringify(file));
 console.log(`league file: ${players.length} players, secret ratings on ${swapped}`);
 
 // 2. create, draft (10 rounds), sim
 const nl = await api.main.runBefore({ viewId: "newLeague", params: {}, ctxBBGM: {}, updateEvents: ["firstRun"], prevData: {} }, cond);
-const settings = { ...nl.defaultSettings, numGames: 36, numGamesDiv: null, numGamesConf: null, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, minRosterSize: 12, maxRosterSize: 12, numDraftRounds: 1, ...GA };   // 12-round fantasy draft (rounds = minRosterSize)
+const settings = { ...nl.defaultSettings, numGames: 36, numGamesDiv: null, numGamesConf: null, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, minRosterSize: 12, maxRosterSize: 12, numDraftRounds: 1, ...money, injuries: INJURIES, injuryRate: 0.000125 / SEASON, ...GA };   // 12-round fantasy draft (rounds = minRosterSize)
 await api.main.createLeague({ name: "SMP III prototype", tid: 0, url: "/init.json", shuffleRosters: false, keptKeys: Object.keys(file).filter((k) => k !== "version"), confs: ga.confs, divs: ga.divs, teamsFromInput: teams, settings, fromFile: { gameAttributes: ga, hasRookieContracts: true, startingSeason: file.startingSeason, teams, version: file.version }, leagueCreationID: "smp3" }, cond);
 await api.main.setLocal(["autoSave", false], cond); idb.cache.stopAutoFlush();
 await api.main.startFantasyDraft([...Array(10).keys()], cond);

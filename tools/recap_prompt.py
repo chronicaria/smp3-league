@@ -38,7 +38,9 @@ Rules:
   ("statement win", "sends a message"), nothing mean about a player as a person, only about how he played.
 - Talk in seeds. Say who moved into the 3 seed, who dropped to the 8 seed, who is a game out of the 4 seed. The top four
   seeds make the playoffs, so the 4 seed line is the one that matters. Each team line below shows its seed before and after.
-- One headline (max 10 words) about the day's biggest story and one sentence under it (the dek).
+- One headline (max 10 words) about the day's biggest story and one sentence under it (the dek). Use strong, physical
+  verbs: a team buries, flattens, crushes or torches another; a team gets blown out or run off the floor. Avoid cute
+  phrasing that needs explaining.
 - Then one paragraph per game, 60-95 words: who won, the score, who decided it with his line, and what it did to the seeds.
   Put the most important game first. Use only the facts below.
 - Never mention ratings, real-life leagues or real-life teams. These are SMP League teams.
