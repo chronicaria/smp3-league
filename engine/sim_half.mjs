@@ -13,6 +13,7 @@ const GA = { ...CAL, ...JSON.parse(process.env.GA || "{}") };   // calibrated le
 // 36/82 as many games and injuries happen 82/36 as often per game. Injuries carried in from the real-player file shrink the same way.
 const SEASON = 36 / 82;
 const INJURIES = JSON.parse(fs.readFileSync(new URL("./injuries_stock.json", import.meta.url))).map((x) => ({ ...x, games: Math.max(0.5, +(x.games * SEASON).toFixed(2)) }));
+const INJ_RATE = 0.000125 / SEASON * 1.4;   // x1.4 over stock so about a tenth of roster player-games are lost, as in the real league
 const CAP = 100000;   // $100M salary cap (BBGM stores thousands); every contract scales with it and rounds to $1M
 const TEAMS = JSON.parse(fs.readFileSync(new URL("./teams.json", import.meta.url)));
 const secret = new Map(JSON.parse(fs.readFileSync(secretFile)).players.map((p) => [p.id, p.ratings]));
@@ -35,14 +36,14 @@ const players = L.players.map((p) => {
 const ga = { ...L.gameAttributes }; delete ga.numGamesConf; delete ga.numGamesDiv;
 Object.assign(ga, { confs: [{ cid: 0, name: "SMP" }], divs: [{ did: 0, cid: 0, name: "SMP" }], numGames: 36, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, draftType: "noLottery", numDraftRounds: 1, ...GA });
 const money = { salaryCap: CAP, minPayroll: 60000, luxuryPayroll: 115000, minContract: 1000, maxContract: 33000, salaryCapType: "soft" };
-Object.assign(ga, money, { injuries: INJURIES, injuryRate: 0.000125 / SEASON });
+Object.assign(ga, money, { injuries: INJURIES, injuryRate: INJ_RATE });
 const file = { version: L.version, startingSeason: L.startingSeason, gameAttributes: ga, teams, players, draftPicks: [] };
 fs.mkdirSync(path.dirname(tmp), { recursive: true }); fs.writeFileSync(tmp, JSON.stringify(file));
 console.log(`league file: ${players.length} players, secret ratings on ${swapped}`);
 
 // 2. create, draft (10 rounds), sim
 const nl = await api.main.runBefore({ viewId: "newLeague", params: {}, ctxBBGM: {}, updateEvents: ["firstRun"], prevData: {} }, cond);
-const settings = { ...nl.defaultSettings, numGames: 36, numGamesDiv: null, numGamesConf: null, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, minRosterSize: 12, maxRosterSize: 12, numDraftRounds: 1, ...money, injuries: INJURIES, injuryRate: 0.000125 / SEASON, ...GA };   // 12-round fantasy draft (rounds = minRosterSize)
+const settings = { ...nl.defaultSettings, numGames: 36, numGamesDiv: null, numGamesConf: null, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, minRosterSize: 12, maxRosterSize: 12, numDraftRounds: 1, ...money, injuries: INJURIES, injuryRate: INJ_RATE, ...GA };   // 12-round fantasy draft (rounds = minRosterSize)
 await api.main.createLeague({ name: "SMP III prototype", tid: 0, url: "/init.json", shuffleRosters: false, keptKeys: Object.keys(file).filter((k) => k !== "version"), confs: ga.confs, divs: ga.divs, teamsFromInput: teams, settings, fromFile: { gameAttributes: ga, hasRookieContracts: true, startingSeason: file.startingSeason, teams, version: file.version }, leagueCreationID: "smp3" }, cond);
 await api.main.setLocal(["autoSave", false], cond); idb.cache.stopAutoFlush();
 await api.main.startFantasyDraft([...Array(10).keys()], cond);

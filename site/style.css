@@ -370,3 +370,13 @@ th.grp, td.grp { border-left: 1px solid var(--line); }
 .pk .tm { text-align: right; font: 500 13px var(--f); }
 .pk .tm small { display: block; font: 400 12px var(--m); color: var(--faint); }
 @media (max-width: 720px) { .pks { grid-template-columns: minmax(0, 1fr); } }
+
+/* tighter home standings; draft picks run 1-5 down the left, 6-10 down the right; units show every name */
+.mini th, .mini td { padding: 7px 5px; font-size: 12.5px; }
+.mini th:first-child, .mini td:first-child { padding-left: 10px; } .mini th:last-child, .mini td:last-child { padding-right: 10px; }
+.mini td.nm { font-size: 13px; } .mini .mv { width: 28px; }
+.pks { grid-auto-flow: column; grid-template-rows: repeat(5, auto); }
+.r-unit { grid-template-columns: auto minmax(0, 1fr) 200px 64px; }
+.r-unit .who b { white-space: normal; overflow: visible; }
+.ls2 td.tt { padding-right: 4px; }
+@media (max-width: 720px) { .pks { grid-auto-flow: row; grid-template-rows: none; } }

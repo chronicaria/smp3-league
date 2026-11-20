@@ -51,7 +51,7 @@
   const HK = { min: (s) => per(s, 'min'), pts: (s) => per(s, 'pts'), reb: (s) => per(s, 'reb'), ast: (s) => per(s, 'ast'), stl: (s) => per(s, 'stl'), blk: (s) => per(s, 'blk'), tov: (s) => per(s, 'tov'),
     fgp: (s) => (s.fga >= 2 * s.gp ? s.fg / s.fga : null), tpp: (s) => (s.tpa >= s.gp ? s.tp / s.tpa : null), ftp: (s) => (s.fta >= s.gp ? s.ft / s.fta : null), pm: (s) => per(s, 'pm') };
   const rankIn = (arr, v) => { let lo = 0, hi = 0; for (const y of arr) { if (y < v) lo++; if (y <= v) hi++; } return arr.length ? (lo + hi) / 2 / arr.length : 0.5; };
-  const tintOf = (p) => `background:color-mix(in srgb, var(--heat) ${(Math.max(0, p) * 46).toFixed(0)}%, transparent)`;
+  const tintOf = (p) => `background:color-mix(in srgb, var(${p >= 0.5 ? '--up' : '--bad'}) ${(Math.abs(p - 0.5) * 64).toFixed(0)}%, transparent)`;
   function heat(k, s, low) {   // style for a table cell: how a player's per-game number ranks among everyone who has played three games
     DIST ??= Object.fromEntries(Object.keys(HK).map((key) => [key, [...stats.values()].filter((x) => x.gp >= 3).map(HK[key]).filter((v) => v != null)]));
     const v = HK[k](s); if (v == null) return '';
@@ -153,7 +153,7 @@
   /* ---------- shared blocks ---------- */
   function standingsMini() {
     const o = order();
-    return card('Standings', `<table><thead><tr><th class="t">Team</th><th>W</th><th>L</th><th>GB</th><th>Playoffs</th><th>Title</th></tr></thead><tbody>${o.map((tid, i) =>
+    return card('Standings', `<table class="mini"><thead><tr><th class="t">Team</th><th>W</th><th>L</th><th>GB</th><th>Playoffs</th><th>Title</th></tr></thead><tbody>${o.map((tid, i) =>
       `<tr${i === 3 ? ' class="cut"' : ''}><td class="t nm">${arrow(tid)}${tlink(tid, `${logo(tid, 20)}${esc(team(tid).name)}`)}</td><td>${rec[tid].w}</td><td>${rec[tid].l}</td><td>${gb(tid, o[0])}</td><td>${oddsStr(tid)}</td><td>${pctStr(odds[tid].c)}</td></tr>`).join('')}</tbody></table>`, '<a href="#standings">Full table</a>');
   }
   const CATS = [['Points', 'PTS', (s) => per(s, 'pts')], ['Rebounds', 'REB', (s) => per(s, 'reb')], ['Assists', 'AST', (s) => per(s, 'ast')], ['Steals', 'STL', (s) => per(s, 'stl')], ['Blocks', 'BLK', (s) => per(s, 'blk')],
@@ -166,9 +166,13 @@
   }
   function teamStatsTable() {
     const ma = (m, a, g) => `${f1(m / g)}-${f1(a / g)}`;
+    const V = { pf: (t) => tstat[t].me.pts / gpT(t), pa: (t) => tstat[t].op.pts / gpT(t), fgp: (t) => tstat[t].me.fg / tstat[t].me.fga, tpp: (t) => tstat[t].me.tp / tstat[t].me.tpa, ftp: (t) => tstat[t].me.ft / tstat[t].me.fta,
+      reb: (t) => tstat[t].me.reb / gpT(t), ast: (t) => tstat[t].me.ast / gpT(t), tov: (t) => tstat[t].me.tov / gpT(t), stl: (t) => tstat[t].me.stl / gpT(t), blk: (t) => tstat[t].me.blk / gpT(t) };
+    const all = Object.fromEntries(Object.keys(V).map((k) => [k, T.map((t) => V[k](t.tid))]));
+    const h = (k, tid, low) => { const p = rankIn(all[k], V[k](tid)); return ` style="${tintOf(low ? 1 - p : p)}"`; };
     const rows = order().map((tid) => { const m = tstat[tid].me, o = tstat[tid].op, g = m.gp;
-      return `<tr><td class="t nm">${tlink(tid, `${logo(tid, 20)}${esc(team(tid).name)}`)}</td><td><b>${f1(m.pts / g)}</b></td><td>${f1(o.pts / g)}</td><td>${ma(m.fg, m.fga, g)}</td><td><b>${pct(m.fg, m.fga)}</b></td><td>${ma(m.tp, m.tpa, g)}</td><td><b>${pct(m.tp, m.tpa)}</b></td><td>${ma(m.ft, m.fta, g)}</td><td><b>${pct(m.ft, m.fta)}</b></td><td>${f1(m.reb / g)}</td><td>${f1(m.ast / g)}</td><td>${f1(m.tov / g)}</td><td>${f1(m.stl / g)}</td><td>${f1(m.blk / g)}</td></tr>`; }).join('');
-    return card('Team stats', `<div class="scroll"><table><thead><tr><th class="t">Team</th><th>PF</th><th>PA</th><th>FG</th><th>FG%</th><th>3P</th><th>3P%</th><th>FT</th><th>FT%</th><th>REB</th><th>AST</th><th>TO</th><th>STL</th><th>BLK</th></tr></thead><tbody>${rows}</tbody></table></div>`, '<span>Per game</span>');
+      return `<tr><td class="t nm">${tlink(tid, `${logo(tid, 20)}${esc(team(tid).name)}`)}</td><td class="grp"${h('pf', tid)}><b>${f1(m.pts / g)}</b></td><td${h('pa', tid, 1)}>${f1(o.pts / g)}</td><td class="grp">${ma(m.fg, m.fga, g)}</td><td${h('fgp', tid)}><b>${pct(m.fg, m.fga)}</b></td><td class="grp">${ma(m.tp, m.tpa, g)}</td><td${h('tpp', tid)}><b>${pct(m.tp, m.tpa)}</b></td><td class="grp">${ma(m.ft, m.fta, g)}</td><td${h('ftp', tid)}><b>${pct(m.ft, m.fta)}</b></td><td class="grp"${h('reb', tid)}>${f1(m.reb / g)}</td><td${h('ast', tid)}>${f1(m.ast / g)}</td><td${h('tov', tid, 1)}>${f1(m.tov / g)}</td><td${h('stl', tid)}>${f1(m.stl / g)}</td><td${h('blk', tid)}>${f1(m.blk / g)}</td></tr>`; }).join('');
+    return card('Team stats', `<div class="scroll"><table><thead><tr><th class="t">Team</th><th class="grp">PF</th><th>PA</th><th class="grp">FG</th><th>FG%</th><th class="grp">3P</th><th>3P%</th><th class="grp">FT</th><th>FT%</th><th class="grp">REB</th><th>AST</th><th>TO</th><th>STL</th><th>BLK</th></tr></thead><tbody>${rows}</tbody></table></div>`, '<span>Per game</span>');
   }
 
   /* ---------- win probability chart ---------- */
@@ -195,7 +199,7 @@
     const cur = svg.querySelector('.cur'), a = team(g.away.tid).abbrev, h = team(g.home.tid).abbrev;
     svg.addEventListener('pointermove', (e) => { const b = svg.getBoundingClientRect(), fr = Math.min(1, Math.max(0, (e.clientX - b.left) / b.width)), s = f.series.findLast((x) => x[0] <= fr * f.total) || f.series[0];
       cur.setAttribute('x1', fr * 1000); cur.setAttribute('x2', fr * 1000); cur.setAttribute('visibility', 'visible');
-      out.innerHTML = `${clock(s[0], f.total)} · ${a} <b>${s[1]}</b> – <b>${s[2]}</b> ${h} · <b>${s[3] >= 0.5 ? h : a} ${Math.round(100 * Math.max(s[3], 1 - s[3]))}%</b>`; });
+      out.innerHTML = `${clock(s[0], f.total)} · ${a} <b>${s[1]}</b> – <b>${s[2]}</b> ${h} · <b>${s[3] >= 0.5 ? h : a} ${(100 * Math.max(s[3], 1 - s[3])).toFixed(1)}%</b>`; });
     svg.addEventListener('pointerleave', () => { cur.setAttribute('visibility', 'hidden'); out.textContent = 'Hover the chart to follow the game'; });
   }
 
@@ -234,7 +238,7 @@
   /* ---------- scores ---------- */
   function scoreRow(g) {
     const a = g.away, h = g.home, f = flow(g), qh = a.q.map((_, i) => (i < 4 ? i + 1 : 'OT'));
-    const tr = (s, o) => `<tr class="${s.pts > o.pts ? 'won' : 'lost'}"><td class="t tm"><div class="tmw">${logo(s.tid, 30)}<span><b>${esc(team(s.tid).name)}</b><small>${recPl(s.tid)}</small></span></div></td>${s.q.map((x) => `<td>${x}</td>`).join('')}<td class="tt">${s.pts}${s.pts > o.pts ? '<i>◂</i>' : ''}</td></tr>`;
+    const tr = (s, o) => `<tr class="${s.pts > o.pts ? 'won' : 'lost'}"><td class="t tm"><div class="tmw">${logo(s.tid, 30)}<span><b>${esc(team(s.tid).name)}</b><small>${recPl(s.tid)}</small></span></div></td>${s.q.map((x) => `<td>${x}</td>`).join('')}<td class="tt">${s.pts}</td></tr>`;
     const top = (s) => { const r = s.box.reduce((x, y) => (gmsc(y) > gmsc(x) ? y : x)); return `<a class="tp" href="#player-${r[0]}">${face(r[0], 38)}<span><b>${esc(short(P.get(r[0]).name))}</b> <small>${P.get(r[0]).pos} · ${team(s.tid).abbrev}</small><em>${r[C.pts]} PTS, ${r[C.orb] + r[C.drb]} REB, ${r[C.ast]} AST${r[C.stl] >= 3 ? `, ${r[C.stl]} STL` : ''}${r[C.blk] >= 3 ? `, ${r[C.blk]} BLK` : ''}</em></span></a>`; };
     const t = (s, k) => tot(s, k), st = (lab, fa, fh) => `<tr><td>${fa}</td><th>${lab}</th><td>${fh}</td></tr>`;
     return `<section class="card grow" style="--away:${team(a.tid).accent};--home:${team(h.tid).accent}">
@@ -282,10 +286,10 @@
   function gameTeamStats(g, f) {
     const a = g.away, h = g.home, A = (k) => tot(a, k), H = (k) => tot(h, k);
     const pr = (lab, m, at) => { const pa = A(at) ? 100 * A(m) / A(at) : 0, ph = H(at) ? 100 * H(m) / H(at) : 0;
-      return `<div class="ts"><div class="ts-top"><span class="v">${pa.toFixed(1)}%<small>${A(m)}-${A(at)}</small></span><span class="lab">${lab}</span><span class="v h"><small>${H(m)}-${H(at)}</small>${ph.toFixed(1)}%</span></div><div class="bars"><div class="track"><div class="fa" style="width:${pa}%"></div></div><div class="track h"><div class="fh" style="width:${ph}%"></div></div></div></div>`; };
+      return `<div class="ts"><div class="ts-top"><span class="v">${Math.round(pa)}%<small>${A(m)}-${A(at)}</small></span><span class="lab">${lab}</span><span class="v h"><small>${H(m)}-${H(at)}</small>${Math.round(ph)}%</span></div><div class="bars"><div class="track"><div class="fa" style="width:${pa}%"></div></div><div class="track h"><div class="fh" style="width:${ph}%"></div></div></div></div>`; };
     const cr = (lab, va, vh, sfx = '') => `<div class="ts"><div class="ts-top"><span class="v">${va}${sfx}</span><span class="lab">${lab}</span><span class="v h">${vh}${sfx}</span></div><div class="split"><div class="fa" style="flex:${+va || 0.01}"></div><div class="fh" style="flex:${+vh || 0.01}"></div></div></div>`;
     return card('Team stats', keys(g) + pr('Field goal %', 'fg', 'fga') + pr('Three point %', 'tp', 'tpa') + pr('Free throw %', 'ft', 'fta') + cr('Rebounds', A('orb') + A('drb'), H('orb') + H('drb')) + cr('Assists', A('ast'), H('ast')) + cr('Turnovers', A('tov'), H('tov')) + cr('Steals', A('stl'), H('stl')) + cr('Blocks', A('blk'), H('blk'))
-      + cr('Percent led', (100 * f.ledA / f.total).toFixed(1), (100 * f.ledH / f.total).toFixed(1), '%') + cr('Largest lead', f.bigA, f.bigH));
+      + cr('Percent led', Math.round(100 * f.ledA / f.total), Math.round(100 * f.ledH / f.total), '%') + cr('Largest lead', f.bigA, f.bigH));
   }
   function game(gid) {
     const g = byGid.get(gid); if (!g) return notFound();
@@ -330,9 +334,8 @@
     const nm = (v, lab, rk) => `<div><b>${v}</b><span>${lab}</span>${rk ? `<small>${ord(rk)}</small>` : ''}</div>`;
     $app.innerHTML = `<section class="card hd" style="--c:${t.accent}">${logo(tid, 96)}<div><h1>${tname(tid)}</h1><div class="sub"><span>${recStr(tid)} · ${ord(o.indexOf(tid) + 1)} of 10 · ${gb(tid, o[0])} GB</span><span class="form">${r.res.slice(-10).map((x) => `<i class="${x}">${x}</i>`).join('')}</span></div></div>
       <div class="nums">${nm(f1(r.pf / gp), 'PF', teamRank(tid, (x) => rec[x].pf / gpT(x)))}${nm(f1(r.pa / gp), 'PA', teamRank(tid, (x) => rec[x].pa / gpT(x), 1))}${nm(sgn(diff(tid), 1), 'Diff', teamRank(tid, diff))}${nm(`${r.hw}-${r.hl}`, 'Home')}${nm(`${r.aw}-${r.al}`, 'Away')}${nm(oddsStr(tid), 'Playoffs')}${nm(pctStr(odds[tid].c), 'Title')}</div></section>
-      <div class="grid g-main"><div class="stack">
-        ${card('Roster', `<div class="scroll"><table><thead><tr><th class="t">Player</th><th class="t">Pos</th><th>Age</th><th>Ht</th><th class="grp">GP</th><th>GS</th><th>MIN</th><th class="grp">PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th class="grp">FG%</th><th>3P%</th><th>FT%</th><th class="grp">+/-</th><th class="grp">Salary</th><th>Thru</th></tr></thead><tbody>${rows}</tbody></table></div>`, `<span>Starters above the line · payroll $${roster.reduce((a, [p]) => a + (p.sal || 0), 0)}M of $${D.cap}M cap</span>`)}
-        ${card('Results', `<div class="scroll"><table><thead><tr><th class="t">Game</th><th class="t">Opponent</th><th class="t">Result</th><th class="t">Top scorer</th></tr></thead><tbody>${games.join('')}</tbody></table></div>`, `<span>${gp} games</span>`)}</div>
+      ${card('Roster', `<div class="scroll"><table><thead><tr><th class="t">Player</th><th class="t">Pos</th><th>Age</th><th>Ht</th><th class="grp">GP</th><th>GS</th><th>MIN</th><th class="grp">PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th class="grp">FG%</th><th>3P%</th><th>FT%</th><th class="grp">+/-</th><th class="grp">Salary</th><th>Thru</th></tr></thead><tbody>${rows}</tbody></table></div>`, `<span>Starters above the line · payroll $${roster.reduce((a, [p]) => a + (p.sal || 0), 0)}M of $${D.cap}M cap</span>`)}
+      <div class="grid g-main" style="margin-top:var(--gap)"><div class="stack">${card('Results', `<div class="scroll"><table><thead><tr><th class="t">Game</th><th class="t">Opponent</th><th class="t">Result</th><th class="t">Top scorer</th></tr></thead><tbody>${games.join('')}</tbody></table></div>`, `<span>${gp} games</span>`)}</div>
       <aside class="stack">${card('Team leaders', tl('Points', 'pts') + tl('Rebounds', 'reb') + tl('Assists', 'ast') + tl('Steals', 'stl') + tl('Blocks', 'blk'))}${card('Team profile', profile, '<span>Rank of 10</span>')}${card('Scoring share', `<div style="padding:8px 0">${share}</div>`, '<span>Share of team points</span>')}${card('Next up', next || '<p class="note">Regular season complete.</p>')}${injuryCard(tid)}</aside></div>`;
   }
 
@@ -415,7 +418,7 @@
   function freeAgents() {
     const col = ([code, label]) => { const xs = D.fa.filter((p) => p.pos === code);
       return card(code, xs.map((p) => { const ini = esc(p.name.split(' ').map((x) => x[0]).join('').slice(0, 2));
-        return `<div class="row r-fa"><span class="bd">${p.bd}</span><span class="face" style="width:32px;height:32px">${p.espn ? `<img src="https://a.espncdn.com/i/headshots/nba/players/full/${p.espn}.png" alt="" loading="lazy">` : `<span class="ini">${ini}</span>`}</span><span class="who"><b>${esc(p.name)}</b><span>${p.age} · ${htS(p.ht)}</span></span></div>`; }).join(''), `<span>${label} · ${xs.length}</span>`); };
+        return `<div class="row r-fa"><span class="bd">${p.bd}</span><span class="face" style="width:32px;height:32px">${p.espn ? `<img src="https://a.espncdn.com/i/headshots/nba/players/full/${p.espn}.png" alt="" loading="lazy">` : `<span class="ini">${ini}</span>`}</span><span class="who"><b>${esc(p.name)}</b><span>${p.age} · ${htS(p.ht)}</span></span></div>`; }).join(''), `<span>${xs.length}</span>`); };
     $app.innerHTML = `<div class="page-h"><h1>Free agents</h1><span>The ${D.fa.length} best unsigned players, by position</span></div>
       <div class="grid g-5">${[['PG', 'Point guards'], ['SG', 'Shooting guards'], ['SF', 'Small forwards'], ['PF', 'Power forwards'], ['C', 'Centers']].map(col).join('')}</div>
       <p class="note" style="padding:10px 0 0">The number is the player's rank on the league draft board. Asking prices will appear once the auction sets the league's salary scale.</p>`;
@@ -424,7 +427,7 @@
     const o = order().reverse(), ht2 = (p) => `${p.age} · ${htS(p.ht)}${p.col ? ` · ${esc(p.col)}` : ''}`;
     const pick = (tid, i) => { const p = D.draft[i]; return `<div class="pk"><span class="no">${i + 1}</span>${tlink(tid, logo(tid, 40))}<span class="who"><b>${esc(p.name)}</b><span>${p.pos} · ${ht2(p)}</span></span><span class="tm">${tlink(tid, esc(team(tid).name))}<small>${recStr(tid)}</small></span></div>`; };
     const col = ([code, label]) => { const xs = D.draft.map((p, i) => [p, i + 1]).filter(([p, n]) => p.pos === code && n > 10);
-      return card(code, xs.map(([p, n]) => `<div class="row r-fa" style="grid-template-columns:30px minmax(0,1fr)"><span class="bd">${n}</span><span class="who"><b>${esc(p.name)}</b><span>${ht2(p)}</span></span></div>`).join('') || '<p class="note">None left.</p>', `<span>${label} · ${xs.length}</span>`); };
+      return card(code, xs.map(([p, n]) => `<div class="row r-fa" style="grid-template-columns:30px minmax(0,1fr)"><span class="bd">${n}</span><span class="who"><b>${esc(p.name)}</b><span>${ht2(p)}</span></span></div>`).join('') || '<p class="note">None left.</p>', `<span>${xs.length}</span>`); };
     $app.innerHTML = `<div class="page-h"><h1>${D.draftYear} draft</h1><span>One round, ten picks</span></div>
       ${card('If the draft were today', `<div class="pks">${o.map(pick).join('')}</div><p class="note">Teams pick in reverse order of the standings (the lottery rules are not set yet), each taking the best prospect left on the league's scouting board.</p>`, '<span>Projected first round</span>')}
       <div class="page-h" style="margin-top:22px"><h1 style="font-size:20px">Best of the rest</h1><span>${D.draft.length - 10} more prospects by position · number is scouting rank</span></div>
@@ -439,14 +442,12 @@
     if (!ids.includes(+LS.a)) LS.a = ''; if (!ids.includes(+LS.b)) LS.b = '';
     const agg = (f) => rows.filter(f).reduce((t, r) => { t[0] += r[5]; t[1] += r[6]; t[2] += r[7]; return t; }, [0, 0, 0]);
     const net = ([sec, pf, pa]) => (pf - pa) / sec * 2880, ok = (x) => x[0] >= 30, has = (r, pid) => r.slice(0, 5).includes(+pid), nm = (pid) => esc(short(P.get(+pid).name)), last = (pid) => esc(P.get(pid).name.split(' ').slice(1).join(' ') || P.get(pid).name);
-    const onoff = ids.map((pid) => [pid, agg((r) => has(r, pid)), agg((r) => !has(r, pid))]).filter((x) => x[1][0] >= 600 && x[2][0] >= 300).map(([pid, on, off]) => [pid, on, off, net(on) - net(off)]).sort((x, y) => y[3] - x[3]);
-    const mxS = Math.max(1, ...onoff.map((x) => Math.abs(x[3]))), bar = (v, mx) => `<span class="dv"><i class="${v >= 0 ? 'p' : 'n'}" style="width:${50 * Math.abs(v) / mx}%"></i></span>`;
+    const bar = (v, mx) => `<span class="dv"><i class="${v >= 0 ? 'p' : 'n'}" style="width:${50 * Math.abs(v) / mx}%"></i></span>`;
     const units = [...rows].filter((r) => r[5] >= 120).sort((x, y) => y[5] - x[5]).slice(0, 15), mxU = Math.max(1, ...units.map((r) => Math.abs(net(r.slice(5)))));
     $app.innerHTML = `<div class="page-h"><h1>Lineups</h1><span>Scoring margin per 48 minutes</span></div>
       <div class="tpick">${order().map((tid) => `<button type="button" data-lteam="${tid}" aria-pressed="${tid === LS.team}">${logo(tid, 30)}<span>${team(tid).abbrev}</span></button>`).join('')}</div>
-      <div class="grid g-2">${card('On/off swing', onoff.map(([pid, on, off, d]) => `<a class="row r-swing" href="#player-${pid}">${face(pid, 30)}<span class="who"><b>${esc(P.get(pid).name)}</b><span>on ${sgn(net(on), 1)} · off ${sgn(net(off), 1)}</span></span>${bar(d, mxS)}<span class="v ${d >= 0 ? 'up' : 'dn'}">${sgn(d, 1)}</span></a>`).join(''), '<span>On minus off</span>')}
       ${card('Most-used units', units.map((r) => { const x = r.slice(5), ps = r.slice(0, 5).sort((p, q) => (stats.get(q)?.min || 0) - (stats.get(p)?.min || 0));
-        return `<div class="row r-unit"><span class="faces">${ps.map((pid) => face(pid, 30)).join('')}</span><span class="who"><b>${ps.map(last).join(' · ')}</b><span>${Math.round(x[0] / 60)} min · scores ${f1(x[1] / x[0] * 2880)} · allows ${f1(x[2] / x[0] * 2880)}</span></span>${bar(net(x), mxU)}<span class="v ${net(x) >= 0 ? 'up' : 'dn'}">${sgn(net(x), 1)}</span></div>`; }).join('') || '<p class="note">No five-man unit has played two minutes together yet.</p>', `<span>${rows.length} units used</span>`)}</div>`;
+        return `<div class="row r-unit"><span class="faces">${ps.map((pid) => face(pid, 30)).join('')}</span><span class="who"><b>${ps.map(last).join(' · ')}</b><span>${Math.round(x[0] / 60)} min · scores ${f1(x[1] / x[0] * 2880)} · allows ${f1(x[2] / x[0] * 2880)}</span></span>${bar(net(x), mxU)}<span class="v ${net(x) >= 0 ? 'up' : 'dn'}">${sgn(net(x), 1)}</span></div>`; }).join('') || '<p class="note">No five-man unit has played two minutes together yet.</p>', `<span>${team(LS.team).abbrev} · ${rows.length} units used</span>`)}`;
     document.querySelectorAll('[data-lteam]').forEach((b) => b.addEventListener('click', () => { LS.team = +b.dataset.lteam; LS.a = LS.b = ''; lineupsPage(); }));
   }
   const notFound = () => { $app.innerHTML = '<p class="muted">That page does not exist. <a href="#home">Back to the front page</a>.</p>'; };

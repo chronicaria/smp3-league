@@ -1,10 +1,10 @@
 {
- "_note": "Calibrated 2026-11-19 so league per-team averages match the real league (113.8 pts, 37.6 3PA, 14.3 TO, 8.2 stl, 4.9 blk). tools/league_avgs.py checks it.",
- "threePointTendencyFactor": 1.23,
- "threePointAccuracyFactor": 1.005,
- "twoPointAccuracyFactor": 1.03,
+ "_note": "Calibrated 2026-11-20 against ratings v3 (wider skill profiles) so league per-team averages match the real league. tools/league_avgs.py, rotation.py and extremes.py check it.",
+ "threePointTendencyFactor": 1.22,
+ "threePointAccuracyFactor": 0.975,
+ "twoPointAccuracyFactor": 1.01,
  "turnoverFactor": 0.86,
- "foulRateFactor": 0.97,
+ "foulRateFactor": 0.99,
  "blockFactor": 0.9,
  "stealFactor": 1.2
 }
