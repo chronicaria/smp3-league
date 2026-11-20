@@ -17,13 +17,14 @@ def season(e):
         w = x['won']['tid']; out['teams'][w]['w'] += 1
     return out
 def report(label, runs):
+    if not runs: return
     S = [season(e) for e in runs]
     print(f"\n== {label}: {len(S)} seasons ==")
     ppg = [T['pts'] / T['gp'] for s in S for T in s['teams'].values()]
     print(f"team points per game: mean {st.mean(ppg):.1f}, range {min(ppg):.1f}-{max(ppg):.1f}")
     wins = [T['w'] for s in S for T in s['teams'].values()]; print(f"wins per team (of 36): sd {st.pstdev(wins):.1f}, best {max(wins)}, worst {min(wins)}")
     inj = [T['inj'] for s in S for T in s['teams'].values()]
-    print(f"man-games lost to injury per team-season: mean {st.mean(inj):.1f}, median {st.median(inj)}, min {min(inj)}, max {max(inj)}, sd {st.pstdev(inj):.1f}  (roster = 360 man-games)")
+    print(f"man-games lost to injury per team-season: mean {st.mean(inj):.1f}, median {st.median(inj)}, min {min(inj)}, max {max(inj)}, sd {st.pstdev(inj):.1f}  ")
     print(f"team-games played with 8 or fewer available: {100 * sum(s['short'] for s in S) / sum(s['tg'] for s in S):.1f}%")
     xs = [(T['inj'], T['w']) for s in S for T in s['teams'].values()]
     mx, my = st.mean(x for x, _ in xs), st.mean(y for _, y in xs)

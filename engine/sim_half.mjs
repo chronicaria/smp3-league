@@ -1,12 +1,14 @@
 // Prototype league: 10 SMP III teams, SECRET ratings applied, fantasy draft (BBGM AI picks), sim to the halfway mark.
 // Runs only on Andrew's Mac against a private zengm build (licence). Output: a BBGM export; tools/make_site_data.py turns it into site data.
 // usage: SEED=7 node engine/sim_half.mjs <zengmDir> <secret_ratings.json> <out.json> [gamesPerTeam=18]
-// env: PBP=0 sims whole days (fast, no timelines); RATINGS=public skips the secret-ratings swap (control runs).
+// env: GA='{"pace":101}' overrides league settings (calibration); PBP=0 sims whole days (fast, no timelines); RATINGS=public skips the secret-ratings swap (control runs).
 import fs from "node:fs";
 import path from "node:path";
 import { boot } from "./boot.mjs";
 import { exportLeague } from "./export.mjs";
 const [zengmDir, secretFile, outFile, half = "18"] = process.argv.slice(2);
+const { _note, ...CAL } = JSON.parse(fs.readFileSync(new URL("./settings.json", import.meta.url)));
+const GA = { ...CAL, ...JSON.parse(process.env.GA || "{}") };   // calibrated league settings, overridable for experiments
 const TEAMS = JSON.parse(fs.readFileSync(new URL("./teams.json", import.meta.url)));
 const secret = new Map(JSON.parse(fs.readFileSync(secretFile)).players.map((p) => [p.id, p.ratings]));
 const tmp = path.resolve("data/.league-init.json");
@@ -24,14 +26,14 @@ const players = L.players.map((p) => {
 	return q;
 });
 const ga = { ...L.gameAttributes }; delete ga.numGamesConf; delete ga.numGamesDiv;
-Object.assign(ga, { confs: [{ cid: 0, name: "SMP" }], divs: [{ did: 0, cid: 0, name: "SMP" }], numGames: 36, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, draftType: "noLottery" });
+Object.assign(ga, { confs: [{ cid: 0, name: "SMP" }], divs: [{ did: 0, cid: 0, name: "SMP" }], numGames: 36, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, draftType: "noLottery", numDraftRounds: 1, ...GA });
 const file = { version: L.version, startingSeason: L.startingSeason, gameAttributes: ga, teams, players, draftPicks: [] };
 fs.mkdirSync(path.dirname(tmp), { recursive: true }); fs.writeFileSync(tmp, JSON.stringify(file));
 console.log(`league file: ${players.length} players, secret ratings on ${swapped}`);
 
 // 2. create, draft (10 rounds), sim
 const nl = await api.main.runBefore({ viewId: "newLeague", params: {}, ctxBBGM: {}, updateEvents: ["firstRun"], prevData: {} }, cond);
-const settings = { ...nl.defaultSettings, numGames: 36, numGamesDiv: null, numGamesConf: null, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, minRosterSize: 10, maxRosterSize: 10 };
+const settings = { ...nl.defaultSettings, numGames: 36, numGamesDiv: null, numGamesConf: null, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, minRosterSize: 12, maxRosterSize: 12, numDraftRounds: 1, ...GA };   // 12-round fantasy draft (rounds = minRosterSize)
 await api.main.createLeague({ name: "SMP III prototype", tid: 0, url: "/init.json", shuffleRosters: false, keptKeys: Object.keys(file).filter((k) => k !== "version"), confs: ga.confs, divs: ga.divs, teamsFromInput: teams, settings, fromFile: { gameAttributes: ga, hasRookieContracts: true, startingSeason: file.startingSeason, teams, version: file.version }, leagueCreationID: "smp3" }, cond);
 await api.main.setLocal(["autoSave", false], cond); idb.cache.stopAutoFlush();
 await api.main.startFantasyDraft([...Array(10).keys()], cond);
@@ -51,6 +53,7 @@ const target = 5 * Number(half);   // five games per game day
 // so sim each game on its own and catch the realtimeUpdate message.
 const PTS = (type) => (type === "ft" ? 1 : type.startsWith("tp") ? 3 : 2);
 const pbp = {}; let caught = null;
+const lineups = {};   // tid -> "pid,pid,pid,pid,pid" -> [seconds, points for, points against]
 const post = globalThis.postMessage;
 globalThis.postMessage = (msg) => { const raw = Array.isArray(msg) && msg[0] === 0 && msg[2]?.[0] === "realtimeUpdate" ? msg[2][3] : null; if (raw?.playByPlay) caught = raw; post(msg); };
 let days = 0, n = 0;
@@ -71,11 +74,25 @@ while (g.get("phase") === PHASE.REGULAR_SEASON && n < target) {
 			tl.push([Math.round(el), a, h, e.pid]);
 		}
 		pbp[gm.gid] = tl; n++;
+		// lineups: starters from the saved box score, then follow the substitution events
+		const box = await idb.cache.games.get(gm.gid);
+		const on = box.teams.map((t) => new Set(t.players.filter((p) => p.gs).map((p) => p.pid))), tids = box.teams.map((t) => t.tid);
+		const bump = (dt, pts, scorer) => on.forEach((set, i) => { const k = [...set].sort((x, y) => x - y).join(","), L = ((lineups[tids[i]] ??= {})[k] ??= [0, 0, 0]); L[0] += dt; if (pts) L[i === scorer ? 1 : 2] += pts; });
+		let last = 0, period = 1;
+		for (const e of caught.playByPlay) {
+			if (e.type === "period" || e.type === "overtime") period = e.period ?? period + 1;
+			if (e.clock === undefined) continue;
+			const el = period <= 4 ? (period - 1) * 720 + (720 - e.clock) : 2880 + (period - 5) * 300 + (300 - e.clock);
+			if (el > last) { bump(el - last, 0); last = el; }
+			if (e.type === "sub") { e.pidsOff.forEach((x) => on[e.t].delete(x)); e.pids.forEach((x) => on[e.t].add(x)); }
+			else if (e.period !== undefined && e.t !== undefined && /^(fg|tp|ft)/.test(e.type) && !/^fga|Miss/.test(e.type)) bump(0, PTS(e.type), e.t);
+		}
+		if (on.some((x) => x.size !== 5)) throw new Error(`lineup tracking broke in game ${gm.gid}`);
 	}
 	days++;
 }
 console.log(`simmed ${days} days, ${n} games with play-by-play`);
-if (process.env.PBP !== "0") fs.writeFileSync(outFile.replace(/\.json$/, "-pbp.json"), JSON.stringify(pbp));
+if (process.env.PBP !== "0") { fs.writeFileSync(outFile.replace(/\.json$/, "-pbp.json"), JSON.stringify(pbp)); fs.writeFileSync(outFile.replace(/\.json$/, "-lineups.json"), JSON.stringify(lineups)); }
 await api.main.setLocal(["autoSave", true], cond);
 fs.writeFileSync(outFile, JSON.stringify(await exportLeague(bbgm, "SMP III prototype")));
 console.log(`wrote ${outFile} ${(fs.statSync(outFile).size / 1e6).toFixed(1)} MB`);

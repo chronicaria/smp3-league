@@ -18,19 +18,31 @@ def strk(tid):
         n += 1
     return f"{s[-1]}{n}"
 name = lambda tid: f"{T[tid]['region']} {T[tid]['name']}"
-order = sorted(rec, key=lambda t: -rec[t][0] / max(1, sum(rec[t])))
+pd = {t['tid']: 0 for t in T}; pd_prev = dict(pd); rec_prev = {t['tid']: [0, 0] for t in T}
+for g in D['games']:
+    if g['day'] > day: continue
+    for me, op in ((g['home'], g['away']), (g['away'], g['home'])):
+        pd[me['tid']] += me['pts'] - op['pts']
+        if g['day'] < day: pd_prev[me['tid']] += me['pts'] - op['pts']; rec_prev[me['tid']][0 if me['pts'] > op['pts'] else 1] += 1
+order = sorted(rec, key=lambda t: (-rec[t][0] / max(1, sum(rec[t])), -pd[t]))
+before = sorted(rec, key=lambda t: (-rec_prev[t][0] / max(1, sum(rec_prev[t])), -pd_prev[t]))
+seed = lambda t: order.index(t) + 1
 print(f"""You are the beat writer for the SMP League, a ten-team fantasy basketball league. Write the recap for Game {day} of 36.
 
 Rules:
-- Wire-service style (AP): past tense, plain verbs, facts first, no hype words, no exclamation marks, no invented quotes.
+- You are a columnist with a voice, not a wire feed. Vary how paragraphs open: lead with the player, the moment, the
+  collapse or the standings stakes, never the same shape twice in a row. Dry wit is welcome; one good line per paragraph
+  at most. No hype words, no exclamation marks, no invented quotes, no cliches ("statement win", "sends a message").
+- Talk in seeds. Say who moved into the 3 seed, who dropped to the 8 seed, who is a game out of the 4 seed. The top four
+  seeds make the playoffs, so the 4 seed line is the one that matters. Each team line below shows its seed before and after.
 - One headline (max 10 words) about the day's biggest story and one sentence under it (the dek).
-- Then one paragraph per game, 45-70 words each: who won, the score, the player who decided it with his line, and one
-  piece of context (a run, a comeback, a streak, what it does to the standings). Use only the facts below.
+- Then one paragraph per game, 55-85 words: who won, the score, who decided it with his line, and what it did to the seeds.
+  Put the most important game first. Use only the facts below.
 - Never mention ratings, real-life leagues or real-life teams. These are SMP League teams.
-- Reply with JSON only: {{"headline": "...", "dek": "...", "games": [{{"gid": <id>, "text": "..."}}, ...]}}, games in the order given.
+- Reply with JSON only: {{"headline": "...", "dek": "...", "games": [{{"gid": <id>, "text": "..."}}, ...]}}.
 
 Standings after Game {day} (top four make the playoffs):""")
-for i, t in enumerate(order): print(f"  {i + 1}. {name(t)} {rec[t][0]}-{rec[t][1]} ({strk(t)})")
+for i, t in enumerate(order): print(f"  {i + 1} seed: {name(t)} {rec[t][0]}-{rec[t][1]} ({strk(t)}), was the {before.index(t) + 1} seed before today")
 print("\nGames:")
 for g in [g for g in D['games'] if g['day'] == day]:
     a, h = g['away'], g['home']; tl = g['tl']
