@@ -1,13 +1,28 @@
 {
  "18": {
-  "headline": "Dončić outguns Cunningham as Queens topples the 2 seed",
-  "dek": "Three teams are now tied at 10-8 around the playoff line after Ithaca edged a Gooning side missing five players, Waltham won a third straight and Rochester got blown out again.",
+  "headline": "Jokić drops 50 and buries the Stingrays",
+  "dek": "Rochester is 15-3 and three games clear, Durham took the 2 seed by running Queens off the floor, and Ithaca lost a ninth straight.",
   "games": [
-   {"gid": 267, "text": "Twenty-one lead changes, 251 points and not one stop anybody will remember. Luka Dončić scored 33 for Queens, clanking 12 of his 16 3-pointers along the way and winning anyway, 127-124, over Stony Brook. Cade Cunningham answered with 28 points, 12 rebounds and 12 assists and has only a loss to show for it. The Pigeons jump from the 7 seed to the 6 seed at 10-8, level with the 4 and 5 seeds. Stony Brook has dropped two straight but keeps the 2 seed."},
-   {"gid": 269, "text": "Gooning dressed seven players, which is a pickup game with a scoreboard, and still led by 10. Then Tyrese Maxey and Franz Wagner took over, scoring 36 and 34, and Ithaca escaped 112-109 to swap places with the Gooners: the Thunder are the 3 seed, Gooning slips to the 4 seed. Stephen Curry poured in 38 with seven 3-pointers while Karl-Anthony Towns, LeBron James, Jalen Brunson and two others watched in very nice jackets."},
-   {"gid": 270, "text": "Scottie Barnes had a triple-double, 18 points, 11 rebounds and 13 assists, and it took him 20 shots to make seven, so let us call it a team effort. Jalen Suggs did the efficient part, 26 points on 11-of-15, and Waltham outlasted Nashville 116-110 through 20 lead changes with a 33-point fourth quarter. The Bears have won three straight and sit in the 5 seed with the same 10-8 record as the 4 seed. Nashville is 5-13 and has stopped checking."},
-   {"gid": 268, "text": "Rochester trailed 39-23 after one quarter and by 31 before the Jays got bored. Toronto, the 8 seed, flattened the Dragons 119-106 behind Pascal Siakam's 27 on 11-of-16 shooting. Nikola Jokić put up 22 points, 17 rebounds and nine assists in the wreckage, which is like finding a grand piano in a landfill. That is four straight losses for Rochester, which has slid from the 6 seed to the 7 seed and is 9-9, a game out and heading the wrong way."},
-   {"gid": 271, "text": "The 1 seed hosted the 10 seed and the 1 seed won, as the arrangement suggests. Cambridge beat Durham 111-99 for its fourth straight victory, though Victor Wembanyama needed 23 shots for his 29 points and nobody will frame the box score. Tyrese Haliburton scored 29 for the Destroyers, who were missing Anthony Edwards and Tyler Herro, have lost three straight and are 4-14. The Platypuses are 13-5 and a game clear at the top, a sentence that keeps getting typed."}
+   {
+    "gid": 270,
+    "text": "Nikola Jokić took 18 shots and missed three of them. He finished with 50 points, 14 rebounds and 16 assists, which covers most of what Rochester did, and the Dragons beat Stony Brook 139-127 after trailing 98-96 through three quarters. There were 22 lead changes before a 43-point fourth quarter ended the discussion. Cade Cunningham's 24 points and nine assists would have won most nights. Rochester is 15-3 with four straight wins. The Stingrays slip from the 2 seed to the 3 seed."
+   },
+   {
+    "gid": 271,
+    "text": "Durham led 79-45 at halftime, which is less a score than a ruling. Anthony Edwards scored 30 on 14 shots, Tyler Herro hit six 3-pointers for 24, and the Destroyers led by 42 before coasting home 123-97 on a 16-point fourth quarter. Queens was missing Luka Dončić and Giannis Antetokounmpo, and RJ Barrett filled the gap by going 5-for-22. Durham climbs to the 2 seed at 12-6. The Pigeons stay the 8 seed at 6-12, four games from the playoff line."
+   },
+   {
+    "gid": 267,
+    "text": "Cambridge never trailed, led by 35 and scored 143 for its fourth win in a row, and all of that only keeps the Platypuses in the 4 seed at 10-8. Kevin Durant needed 12 shots for 26 points, Bam Adebayo had 22, and Zion Williamson scored 21 without attempting a 3-pointer. Nashville got 29 from Devin Booker and 25 on 9-for-12 shooting from Donovan Mitchell and lost 143-112 anyway. The Elephants drop from the 5 seed to the 7 seed, two games behind Cambridge."
+   },
+   {
+    "gid": 268,
+    "text": "Austin Reaves had 29 points and 10 assists, Stephen Curry made eight of 11 shots for 22, and the Gooners flattened Toronto 135-112 to reach 9-9 and the 5 seed, one game behind Cambridge. James Harden handed out 12 assists for the Jays and shot 3-for-13, missing all six of his 3-pointers. Reed Sheppard made six of seven from deep, so Toronto's shooting averaged out to a fourth straight loss. The Jays are the 10 seed at 5-13."
+   },
+   {
+    "gid": 269,
+    "text": "Ithaca has lost nine straight, and this one took effort. The Thunder led by six, trailed by only five after three quarters, then scored 18 in the fourth. Deni Avdija supplied the rest for Waltham: 35 points, 11 rebounds and seven 3-pointers in a 107-99 win, with Lauri Markkanen out with a torn ACL. Damian Lillard shot 6-for-17. The Bears move up to the 6 seed at 8-10, two games out of the 4 seed. Ithaca, 5-13, is the 9 seed only because Toronto exists."
+   }
   ]
  }
 }

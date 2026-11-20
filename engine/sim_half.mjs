@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { boot } from "./boot.mjs";
 import { exportLeague } from "./export.mjs";
+import { fairSchedule, report } from "./schedule.mjs";
 const [zengmDir, secretFile, outFile, half = "18"] = process.argv.slice(2);
 const { _note, ...CAL } = JSON.parse(fs.readFileSync(new URL("./settings.json", import.meta.url)));
 const GA = { ...CAL, ...JSON.parse(process.env.GA || "{}") };   // calibrated league settings, overridable for experiments
@@ -49,15 +50,14 @@ await api.main.setLocal(["autoSave", false], cond); idb.cache.stopAutoFlush();
 await api.main.startFantasyDraft([...Array(10).keys()], cond);
 await api.playMenu.untilEnd(undefined, cond);
 await api.playMenu.untilRegularSeason(undefined, cond);
-// Schedule: 4x circle-method round robin = 36 game days, all ten teams play every day, each pair meets 4 times (2 home, 2 away).
-const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const circle = (tids) => {
-	const n = tids.length, t = shuffle([...tids]), rounds = [];
-	for (let r = 0; r < n - 1; r++) { const games = []; for (let i = 0; i < n / 2; i++) { const a = t[i], b = t[n - 1 - i]; games.push((r + i) % 2 === 0 ? [a, b] : [b, a]); } rounds.push(games); t.splice(1, 0, t.pop()); }
-	const out = []; for (let c = 0; c < 4; c++) for (const r of shuffle([...rounds.keys()])) out.push(...rounds[r].map(([h, a]) => (c % 2 === 0 ? [h, a] : [a, h])));
-	return out;
-};
-await bbgm.season.setSchedule(circle([...Array(10).keys()]));
+// Schedule: four round robins = 36 game days, all ten teams play every day, each pair meets 4 times (2 home, 2 away).
+// engine/schedule.mjs picks the fairest one it can find: home and away alternate, and every team's opponents so far
+// are about equally strong after every game day. Strength here is the mean overall of a team's eight best players.
+const roster = await idb.cache.players.indexGetAll("playersByTid", [0, Infinity]);
+const strength = [...Array(10).keys()].map((tid) => { const o = roster.filter((p) => p.tid === tid).map((p) => p.ratings.at(-1).ovr).sort((x, y) => y - x).slice(0, 8); return o.reduce((x, y) => x + y, 0) / o.length; });
+const sched = fairSchedule(strength);
+{ const days = Array.from({ length: 36 }, (_, d) => sched.slice(d * 5, d * 5 + 5)), r = report(days, strength); console.log(`schedule: longest home/away run ${r.maxRun}, ${r.breaks} repeats in 350 turnarounds, opponent strength within ${r.worstStrength.toFixed(2)} sd of even on every day`); }
+await bbgm.season.setSchedule(sched);
 const target = 5 * Number(half);   // five games per game day
 // Play-by-play: the engine only records it for one game at a time (game.play(..., gidOneGame, playByPlay)) and hands it to the UI,
 // so sim each game on its own and catch the realtimeUpdate message.
