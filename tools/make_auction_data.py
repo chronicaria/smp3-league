@@ -1,7 +1,7 @@
-"""Auction config for the league site: the top 300 players on the draft board, plus demo bids.
+"""Auction config for the league site: every player on the draft board, plus demo bids.
 usage: python3 tools/make_auction_data.py
 Writes site/data/auction.json and site/data/auction-demo.csv. No ratings ship: only board rank, name, position, age,
-height and the ESPN id (for the face and the link to his ESPN page).
+height, the ESPN id (for the face and the link to his ESPN page) and last season's real per-game line.
 
 Every player opens at $1M (Andrew, 11-20: enough teams will bid that stars cannot go cheap). The expected-price curve
 a * rank^-0.6 (capped at $35M, top 120 totalling $1B) is only used to make the demo bids look plausible."""
@@ -9,7 +9,7 @@ import csv, json, os, random
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BOARD = '/Users/andrewpark/Code/rome-kits/Knowledge/Sports/Basketball/SMP III/board/players.json'
 TEAMS = [t['abbrev'] for t in json.load(open(os.path.join(ROOT, 'engine/teams.json')))]
-N, BUDGET, ROSTER, MAX = 300, 100, 12, 35
+N, BUDGET, ROSTER, MAX = None, 100, 12, 35
 board = json.load(open(BOARD))[:N]
 
 def curve(a): return [min(MAX, a * r ** -0.6) for r in range(1, 121)]
@@ -19,15 +19,16 @@ for _ in range(60):
     lo, hi = (mid, hi) if sum(curve(mid)) < 1000 else (lo, mid)
 market = lambda r: min(MAX, hi * r ** -0.6)
 lots = [{k: v for k, v in dict(id=p['id'], rk=p['rk'], n=p['n'], pos=p['pos'], age=p['age'], ht=p.get('ht'), espn=p.get('espn'),
-                               open=1).items() if v is not None} for p in board]
+                               open=1, s=[p['s'].get(k) for k in ('g', 'mp', 'pts', 'reb', 'ast', 'stl', 'blk', 'fg', 'tp', 'ft')] if p.get('s') else None).items() if v is not None} for p in board]
 
 # ---- settings Andrew fills in when the real auction opens (see README "Auction") ----
 cfg = dict(
-    start=None,          # e.g. "2026-12-21T12:00:00-05:00"; null = demo mode (the clock starts 20 hours before you load the page)
+    start='2026-11-20T12:00:00-05:00',   # bids stamped before this are refused; None = demo mode
+    close='2026-11-22T23:59:59-05:00',   # Sunday night, Eastern; overrides start + hours
     hours=48, budget=BUDGET, roster=ROSTER, max=MAX,
     tz='-05:00',         # the bid sheet's time zone as a UTC offset (File > Settings in the sheet); -05:00 is US Eastern in winter
-    csv='',              # the published "Public bids" sheet tab, as CSV; empty = use auction-demo.csv
-    form=dict(url='', team='', player='', salary='', years=''),   # Google Form prefill: the form URL and each question's entry id
+    csv='https://docs.google.com/spreadsheets/d/e/2PACX-1vRZzKvD55n_uNnddZ3MKZA39rNNBoQzMfbbNmZY509nTCzCFwDLVdS3z19N9bF2UkJ7iFDUwpYLS3VT/pub?output=csv',   # the form's response sheet, published as CSV
+    form=dict(url='https://docs.google.com/forms/d/e/1FAIpQLSfgclHk1wATdaob-Ri4iCqYOt5YPrmRwX-EN8Iwd067kUVSBw/viewform', team='1058264156', player='1685387383', salary='357442458', years='441189916'),   # Google Form and each question's entry id (for prefilled bid links)
     teams=TEAMS, lots=lots)
 json.dump(cfg, open(os.path.join(ROOT, 'site/data/auction.json'), 'w'), separators=(',', ':'), ensure_ascii=False)
 
@@ -53,5 +54,5 @@ while t < 20:
         rows.append([f'h:{t:.3f}', tm, l['n'], sal, yrs]); break
 with open(os.path.join(ROOT, 'site/data/auction-demo.csv'), 'w', newline='') as f:
     w = csv.writer(f); w.writerow(['Timestamp', 'Team', 'Player', 'Salary', 'Years']); w.writerows(rows)
-print(f"{len(lots)} lots; opening prices #1 ${lots[0]['open']}M, #10 ${lots[9]['open']}M, #50 ${lots[49]['open']}M, #100 ${lots[99]['open']}M, #200 ${lots[199]['open']}M; top-120 opening total ${sum(l['open'] for l in lots[:120])}M")
+print(f"{len(lots)} lots; opening prices #1 ${lots[0]['open']}M, #10 ${lots[9]['open']}M, #50 ${lots[49]['open']}M, #100 ${lots[99]['open']}M, last ${lots[-1]['open']}M; top-120 opening total ${sum(l['open'] for l in lots[:120])}M")
 print(f"{len(rows)} demo bids; leaders: " + ', '.join(f"{tm} {count(tm)}/${spent(tm)}M" for tm in TEAMS))

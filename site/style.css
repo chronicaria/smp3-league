@@ -507,3 +507,12 @@ td b.hi { font-weight: 800; color: #fff; font-size: 1.08em; }
 .squad { padding: 14px 12px; gap: 6px; } .squad .dt { flex: 1 1 120px; width: auto; }
 .squad .dt b { font-size: 14px; } .squad .dt small { font-size: 11.5px; color: var(--muted); }
 .seg a { padding: 10px 17px; font-size: 14px; }
+
+/* auction: numbered rules, stats columns */
+.rules-ol { margin: 0; padding: 14px 18px 14px 40px; columns: 2; column-gap: 40px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.rules-ol li { padding: 3px 0 3px 4px; break-inside: avoid; } .rules-ol li::marker { font: 700 13px var(--m); color: var(--gold); } .rules-ol b { color: var(--ink); font-weight: 600; }
+.au-list td.pts { color: var(--ink); font-weight: 600; } .faint { color: var(--faint); }
+.au-list th, .au-list td { padding-inline: 7px; }
+.pager .seg { flex-wrap: wrap; justify-content: center; }
+[hidden] { display: none !important; }
+@media (max-width: 900px) { .rules-ol { columns: 1; } }

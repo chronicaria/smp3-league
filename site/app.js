@@ -497,6 +497,7 @@
   /* ---------- auction: computed in the browser from the published bid sheet ---------- */
   let AU = null, auTimer = null; const AS = { q: '', pos: '', st: '', led: '', page: 0, sort: { k: 'rk', dir: 1 }, open: null, allBids: false };
   const POSN = ['PG', 'SG', 'SF', 'PF', 'C'];
+  const STATS = [['g', 'GP', 0], ['mp', 'MIN', 1], ['pts', 'PTS', 1], ['reb', 'REB', 1], ['ast', 'AST', 1], ['stl', 'STL', 1], ['blk', 'BLK', 1], ['fg', 'FG%', 1], ['tp', '3P%', 1], ['ft', 'FT%', 1]];   // auction lots carry last season's real per-game line in this order
   function parseCsv(text) {
     const rows = []; let row = [], cur = '', q = false;
     for (let i = 0; i < text.length; i++) { const ch = text[i];
@@ -509,7 +510,7 @@
     if (AU && Date.now() - AU.at < 60e3) return AU;
     const raw = await fetch('data/auction.json').then((r) => r.json()), demo = !raw.csv;
     const text = await fetch(raw.csv || 'data/auction-demo.csv', { cache: 'no-store' }).then((r) => r.text());
-    const start = raw.start ? Date.parse(raw.start) : (AU ? AU.cfg.start : Date.now() - 20 * 3600e3), cfg = { ...raw, start, close: start + raw.hours * 3600e3 };
+    const start = raw.start ? Date.parse(raw.start) : (AU ? AU.cfg.start : Date.now() - 20 * 3600e3), cfg = { ...raw, start, close: raw.close ? Date.parse(raw.close) : start + raw.hours * 3600e3 };
     const byName = new Map(cfg.lots.map((l) => [l.n.toLowerCase(), l.id]));
     const abbr = (s) => { const u = String(s).trim().toUpperCase(); return (T.find((t) => t.abbrev === u || t.name.toUpperCase() === u || `${t.region} ${t.name}`.toUpperCase() === u) || { abbrev: u }).abbrev; };
     const rows = parseCsv(text), head = (rows.shift() || []).map((h) => h.toLowerCase()), ix = (k) => head.findIndex((h) => h.includes(k));
@@ -525,7 +526,7 @@
   const ago = (t) => { const m = Math.max(0, Math.round((Date.now() - t) / 60e3)); return m < 60 ? `${m}m ago` : `${Math.floor(m / 60)}h ${m % 60}m ago`; };
   const deal = (b) => `$${b.sal}M × ${b.yrs}`;
   const clockText = (cfg) => { const ms = cfg.close - Date.now(); if (ms <= 0) return 'Closed'; const h = Math.floor(ms / 3600e3), m = Math.floor(ms % 3600e3 / 60e3), s = Math.floor(ms % 60e3 / 1e3); return h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m ${String(s).padStart(2, '0')}s`; };
-  const formUrl = (cfg, l, ab) => { const f = cfg.form; if (!f || !f.url) return null; const q = [['usp', 'pp_url'], [f.player && `entry.${f.player}`, l && l.n], [f.team && `entry.${f.team}`, ab]].filter((x) => x[0] && x[1]).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&'); return `${f.url}?${q}`; };
+  const formUrl = (cfg, l, ab) => { const f = cfg.form; if (!f || !f.url) return null; const q = [['usp', 'pp_url'], [f.player && `entry.${f.player}`, l && l.n], [f.team && `entry.${f.team}`, ab && (() => { const t = T.find((x) => x.abbrev === ab); return t ? `${t.region} ${t.name}` : ab; })()]].filter((x) => x[0] && x[1]).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&'); return `${f.url}?${q}`; };
   function tick(cfg) { clearInterval(auTimer); auTimer = setInterval(() => { const el = document.getElementById('au-clock'); if (!el) return clearInterval(auTimer); el.textContent = clockText(cfg); }, 1000); }
 
   async function auctionPage(arg) {
@@ -537,7 +538,7 @@
     const tiles = byName.map((t) => { const s = state.teams[t.abbrev];
       return `<a class="au-team" href="#auction-${t.abbrev}">${logo(t.tid, 38)}<span class="who"><b>${esc(t.name)}</b><span>${s.n}/${cfg.roster} players</span></span><span class="amt"><b>$${s.left}M</b><span>left</span></span><span class="meter"><i style="width:${100 * s.spent / cfg.budget}%;background:${t.accent}"></i></span></a>`; }).join('');
     const feed = (xs) => xs.map(([l, b, sub]) => `<a class="row r-bid" href="#auction-${b.team}">${logo(tidOf(b.team), 22)}${lface(l, 30)}<span class="who"><b>${esc(l.n)}</b><span>${sub}</span></span><span class="v">${deal(b)}</span></a>`).join('') || '<p class="note">No bids yet.</p>';
-    const recent = feed(state.log.filter((b) => b.ok).slice(-7).reverse().map((b) => [byId.get(b.pid), b, `${team(tidOf(b.team)).name} · ${ago(b.t)}`]));
+    const recent = feed(state.log.filter((b) => b.ok).slice(-5).reverse().map((b) => [byId.get(b.pid), b, `${team(tidOf(b.team)).name} · ${ago(b.t)}`]));
     const biggest = feed([...state.lots.values()].filter((x) => x.lead).sort((a, b) => b.lead.score - a.lead.score).slice(0, 5).map((x) => [x, x.lead, `${team(tidOf(x.lead.team)).name} · ${x.history.length} bid${x.history.length === 1 ? '' : 's'}`]));
     const show = (l) => { const ld = L(l).lead; return (!q || l.n.toLowerCase().includes(q)) && (!AS.pos || l.pos === AS.pos) && (!AS.st || (AS.st === 'open' ? !ld : !!ld)) && (!AS.led || (ld && ld.team === AS.led)); };
     const detail = (l) => { const x = L(l), espn = l.espn ? `https://www.espn.com/nba/player/_/id/${l.espn}` : null, bid = formUrl(cfg, l);
@@ -545,22 +546,23 @@
         <div class="lot-a">${bid && !closed ? `<a class="btn go" href="${bid}" target="_blank" rel="noopener">Bid on ${esc(l.n.split(' ').slice(-1)[0])}</a>` : ''}${espn ? `<a class="btn" href="${espn}" target="_blank" rel="noopener">ESPN page ↗</a>` : ''}</div></div>`; };
     const offer = (ld) => (ld ? `<span class="px">${logo(tidOf(ld.team), 18)}<b>$${ld.sal}M</b><small>× ${ld.yrs}</small></span>` : '<span class="px none"><small>No bids</small></span>');
     const rows = cfg.lots.filter(show), SK = { rk: (l) => l.rk, n: (l) => l.n, pos: (l) => POSN.indexOf(l.pos), age: (l) => l.age, offer: (l) => (L(l).lead ? L(l).lead.score : 0), bids: (l) => L(l).history.length, last: (l) => (L(l).lead ? L(l).lead.t : 0) };
+    STATS.forEach(([k], i) => { SK[k] = (l) => (l.s && l.s[i] != null ? l.s[i] : -1); });
     const sk = SK[AS.sort.k]; rows.sort((a, b) => { const x = sk(a), y = sk(b); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * AS.sort.dir || a.rk - b.rk; });
     const PG = 50, pages = Math.max(1, Math.ceil(rows.length / PG)); AS.page = Math.min(AS.page, pages - 1);
     const th = (k, lab, cls = '') => `<th data-ak="${k}" class="${cls}${AS.sort.k === k ? ' on' : ''}">${lab}${AS.sort.k === k ? (AS.sort.dir < 0 ? ' ↓' : ' ↑') : ''}</th>`;
-    const list = `<div class="scroll"><table class="au-list"><thead><tr>${th('rk', '#', 't')}${th('n', 'Player', 't')}${th('pos', 'Pos', 't')}${th('age', 'Age')}<th>Ht</th>${th('offer', 'Best offer', 'grp')}${th('bids', 'Bids')}${th('last', 'Last bid')}<th class="grp"></th></tr></thead><tbody>${rows.slice(AS.page * PG, AS.page * PG + PG).map((l) => { const x = L(l), ld = x.lead, on = AS.open === l.id;
-      return `<tr class="lr${on ? ' on' : ''}" data-lot="${l.id}"><td class="t rk">${l.rk}</td><td class="t nm"><span class="pl">${lface(l, 40)}${l.espn ? `<a href="https://www.espn.com/nba/player/_/id/${l.espn}" target="_blank" rel="noopener">${esc(l.n)}</a>` : `<span>${esc(l.n)}</span>`}</span></td><td class="t"><span class="chip">${l.pos}</span></td><td>${l.age}</td><td>${htS(l.ht)}</td><td class="grp">${offer(ld)}</td><td>${x.history.length || '—'}</td><td class="muted">${ld ? ago(ld.t) : '—'}</td><td class="grp t"><span class="more2">${on ? 'Close' : 'Details'}</span></td></tr>${on ? `<tr class="ld"><td colspan="9">${detail(l)}</td></tr>` : ''}`; }).join('') || '<tr><td class="t muted" colspan="9">Nobody matches those filters.</td></tr>'}</tbody></table></div>${pages > 1 ? `<div class="pager"><div class="seg" role="group" aria-label="Page">${Array.from({ length: pages }, (_, i) => `<button type="button" data-pg="${i}" aria-pressed="${i === AS.page}">${i * PG + 1}–${Math.min(rows.length, (i + 1) * PG)}</button>`).join('')}</div></div>` : ''}`;
+    const list = `<div class="scroll"><table class="au-list"><thead><tr>${th('rk', '#', 't')}${th('n', 'Player', 't')}${th('pos', 'Pos', 't')}${th('age', 'Age')}<th>Ht</th>${STATS.map(([k, lab], i) => th(k, lab, i ? '' : 'grp')).join('')}${th('offer', 'Best offer', 'grp')}${th('bids', 'Bids')}${th('last', 'Last bid')}<th class="grp"></th></tr></thead><tbody>${rows.slice(AS.page * PG, AS.page * PG + PG).map((l) => { const x = L(l), ld = x.lead, on = AS.open === l.id;
+      return `<tr class="lr${on ? ' on' : ''}" data-lot="${l.id}"><td class="t rk">${l.rk}</td><td class="t nm"><span class="pl">${lface(l, 40)}${l.espn ? `<a href="https://www.espn.com/nba/player/_/id/${l.espn}" target="_blank" rel="noopener">${esc(l.n)}</a>` : `<span>${esc(l.n)}</span>`}</span></td><td class="t"><span class="chip">${l.pos}</span></td><td>${l.age}</td><td>${htS(l.ht)}</td>${STATS.map(([k, , d], i) => `<td class="${i ? '' : 'grp'}${k === 'pts' ? ' pts' : ''}">${l.s && l.s[i] != null ? (d ? l.s[i].toFixed(1) : l.s[i]) : '<span class="faint">—</span>'}</td>`).join('')}<td class="grp">${offer(ld)}</td><td>${x.history.length || '—'}</td><td class="muted">${ld ? ago(ld.t) : '—'}</td><td class="grp t"><span class="more2">${on ? 'Close' : 'Details'}</span></td></tr>${on ? `<tr class="ld"><td colspan="19">${detail(l)}</td></tr>` : ''}`; }).join('') || '<tr><td class="t muted" colspan="19">Nobody matches those filters.</td></tr>'}</tbody></table></div>${pages > 1 ? `<div class="pager"><div class="seg" role="group" aria-label="Page">${Array.from({ length: pages }, (_, i) => `<button type="button" data-pg="${i}" aria-pressed="${i === AS.page}">${i * PG + 1}–${Math.min(rows.length, (i + 1) * PG)}</button>`).join('')}</div></div>` : ''}`;
     const led = cfg.lots.filter((l) => L(l).lead).length, money = Object.values(state.teams).reduce((a, s) => a + s.spent, 0);
     const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([k, lab]) => `<button type="button" data-af="${key}" data-av="${k}" aria-pressed="${AS[key] === k}">${lab}</button>`).join('')}</div>`;
-    $app.innerHTML = `<div class="au-head"><div><h1>Auction</h1><p class="lede2">Every team has <b>$${cfg.budget}M</b> to build a <b>${cfg.roster}</b>-man roster from the top ${cfg.lots.length} players on the board.</p></div>
+    $app.innerHTML = `<div class="au-head"><div><h1>Auction</h1><p class="lede2">Bidding closes <b>${new Date(cfg.close).toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' })} Eastern</b>.</p></div>
         <div class="au-clock"><span class="label">${closed ? 'The auction is over' : 'Bidding closes in'}</span><b id="au-clock">${clockText(cfg)}</b><span class="cap">${led} of ${cfg.lots.length} players have a bid · $${money}M committed</span>${bidLink && !closed ? `<a class="btn go" href="${bidLink}" target="_blank" rel="noopener">Place a bid</a>` : ''}</div></div>
-      <section class="card rules four"><div><b>Salary × length.</b> An offer is worth its salary plus a quarter for each extra year: $10M for 3 years beats $14M for 1.</div><div><b>Whole millions, 1 to 5 years, $1M minimum.</b> A new offer must beat the best one so far.</div><div><b>Stay inside $${cfg.budget}M.</b> Your leading bids plus $1M for every empty roster spot cannot pass the budget. Get outbid and the money is yours again.</div><div><b>One deadline.</b> Everything closes together after ${cfg.hours} hours. A bid one second before it counts.</div></section>
+      ${card('Rules', `<ol class="rules-ol"><li>Every team has <b>$${cfg.budget}M</b> to sign <b>${cfg.roster} players</b>.</li><li>A bid is a salary (whole millions, <b>$1M to $${cfg.max}M</b>) and a length (<b>1 to 5 years</b>).</li><li>Longer deals count for more: value = salary × (1 + 0.25 per extra year). <b>$10M for 3 years beats $14M for 1.</b></li><li>The highest value leads. To take a player, beat the leading value.</li><li>Your leading bids plus <b>$1M for each empty roster spot</b> cannot pass $${cfg.budget}M. If you are outbid, that money is free again.</li><li>Bids are public and binding. When bidding closes, whoever leads signs the player.</li><li>A team short of ${cfg.roster} players is given the best unsigned players at $1M each.</li></ol>`)}
       ${demo ? '<p class="au-demo">Demo bids. These are made up to show how the page works; real bids appear here once the bid form is connected.</p>' : ''}
       <div class="au-teams">${tiles}</div>
-      <div class="grid g-main au-body"><div class="stack">
+      <div class="grid g-2 au-body">${card('Latest bids', recent, `<span>${state.log.filter((b) => b.ok).length} accepted</span>`)}${card('Biggest offers', biggest, '<span>Salary × length</span>')}</div>
+      <div class="au-body">
         <div class="tools au-tools"><input class="q" id="auq" type="search" placeholder="Find a player" value="${esc(AS.q)}" aria-label="Find a player">${seg('pos', [['', 'All'], ...POSN.map((p) => [p, p])])}${seg('st', [['', 'Everyone'], ['open', 'No bids yet'], ['bid', 'Has a bid']])}</div>
-        ${card('Best available', list, `<span>${rows.length} of ${cfg.lots.length} · ordered by ${{ rk: 'board rank', n: 'name', pos: 'position', age: 'age', offer: 'best offer', bids: 'bids', last: 'latest bid' }[AS.sort.k]}</span>`)}</div>
-        <aside class="stack">${card('Latest bids', recent, `<span>${state.log.filter((b) => b.ok).length} accepted</span>`)}${card('Biggest offers', biggest, '<span>Salary × length</span>')}</aside></div>`;
+        ${card('Best available', list, `<span>${rows.length} of ${cfg.lots.length} · ordered by ${{ rk: 'board rank', n: 'name', pos: 'position', age: 'age', offer: 'best offer', bids: 'bids', last: 'latest bid' }[AS.sort.k] || `last season's ${STATS.find((x) => x[0] === AS.sort.k)[1]}`}</span>`)}</div>`;
     tick(cfg);
     const again = (keepFocus) => { const y = scrollY; auctionPage().then(() => { scrollTo(0, y); if (keepFocus) { const n = document.getElementById('auq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }); };
     const inp = document.getElementById('auq'); inp.addEventListener('input', () => { AS.q = inp.value; AS.page = 0; again(true); });
@@ -581,7 +583,7 @@
     const seg = (w, c, lab) => (w > 0 ? `<i style="flex:${w};background:${c}" title="${lab}"></i>` : '');
     const top = [...mine].sort((a, b) => b.b.sal - a.b.sal);
     const budget = `<div class="bud"><div class="budbar">${top.map((x, i) => seg(x.b.sal, `color-mix(in srgb, ${t.accent} ${100 - i * 6}%, var(--surface))`, `${x.l.n} $${x.b.sal}M`)).join('')}${seg(open, 'var(--faint)', `$${open}M held for ${open} open spots`)}${seg(Math.max(0, free), 'var(--soft)', `$${Math.max(0, free)}M free`)}</div>
-      <div class="kv"><div><b>$${spent}M</b><span>Committed</span></div><div><b>$${open}M</b><span>Held for ${open} open spot${open === 1 ? '' : 's'}</span></div><div><b>$${Math.max(0, free)}M</b><span>Free to bid</span></div><div><b>${closed ? '—' : '$' + s.maxBid + 'M'}</b><span>Most on one player</span></div></div></div>`;
+      <div class="kv"><div><b>$${spent}M</b><span>Committed</span></div><div><b>$${open}M</b><span>Held for ${open} open spot${open === 1 ? '' : 's'}</span></div><div><b>$${Math.max(0, free)}M</b><span>Free to bid</span></div></div></div>`;
     const status = (b) => (b.ok ? (state.lots.get(b.pid).lead.team === ab && state.lots.get(b.pid).lead.t === b.t ? ['Leading', 'up'] : ['Outbid', 'muted']) : [b.why, 'dn']);
     const all = state.log.filter((b) => b.team === ab).reverse(), shown = AS.allBids ? all : all.slice(0, 8);
     const bids = shown.map((b) => { const l = byId.get(b.pid), [txt, cls] = status(b); return `<div class="row r-mybid">${l ? lface(l, 30) : '<span class="face" style="width:30px;height:30px"></span>'}<span class="who"><b>${esc(l ? l.n : b.name || 'Unknown player')}</b><span class="${cls}">${esc(txt)}</span></span><span class="v">${Number.isFinite(b.sal) && Number.isFinite(b.yrs) ? deal(b) : '—'}</span><span class="n">${ago(b.t)}</span></div>`; }).join('') || '<p class="note">No bids yet.</p>';
@@ -599,7 +601,8 @@
 
   /* ---------- router ---------- */
   function route() {
-    const h = location.hash.slice(1) || 'home', i = h.indexOf('-'), kind = i < 0 ? h : h.slice(0, i), arg = i < 0 ? '' : h.slice(i + 1);
+    const h = location.hash.slice(1) || 'home', i = h.indexOf('-'); let kind = i < 0 ? h : h.slice(0, i), arg = i < 0 ? '' : h.slice(i + 1);
+    if (D.preseason && kind !== 'auction') { kind = 'auction'; arg = ''; }   // nothing has been played yet: every page is the auction
     const nav = { home: 'home', scores: 'scores', game: 'scores', standings: 'standings', leaders: 'players', players: 'players', player: 'players', freeagents: 'freeagents', draft: 'draft', recap: 'home', auction: 'auction' }[kind];
     clearInterval(auTimer);
     document.querySelectorAll('[data-nav]').forEach((a) => (a.dataset.nav === nav ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
@@ -614,9 +617,10 @@
   }
 
   Promise.all([fetch('data/league.json').then((r) => r.json()), fetch('data/recaps.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({}))]).then(([d, rc]) => {
-    D = d; R = rc; derive();
-    document.getElementById('when').textContent = `${D.season} · through Game ${lastDay}`;
-    document.getElementById('logos').innerHTML = [...T].sort((a, b) => a.region.localeCompare(b.region)).map((t) => `<a href="#team-${t.abbrev}" title="${tname(t.tid)}">${logo(t.tid, 22)}${t.abbrev}</a>`).join('');
+    D = d; R = rc;
+    if (D.preseason) { T = D.teams; P = new Map(); document.querySelectorAll('[data-nav]').forEach((a) => { a.hidden = a.dataset.nav !== 'auction'; }); } else derive();
+    document.getElementById('when').textContent = D.preseason ? `${D.season} · preseason` : `${D.season} · through Game ${lastDay}`;
+    document.getElementById('logos').innerHTML = [...T].sort((a, b) => a.region.localeCompare(b.region)).map((t) => `<a href="#${D.preseason ? 'auction' : 'team'}-${t.abbrev}" title="${tname(t.tid)}">${logo(t.tid, 22)}${t.abbrev}</a>`).join('');
     addEventListener('hashchange', route); route();
   }).catch((e) => { console.error(e); $app.innerHTML = '<p class="muted">The league data did not load. Reload the page.</p>'; });
 })();
