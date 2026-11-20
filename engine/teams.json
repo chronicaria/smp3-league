@@ -1,0 +1,112 @@
+[
+ {
+  "abbrev": "CAM",
+  "region": "Cambridge",
+  "name": "Platypuses",
+  "colors": [
+   "#1F4A36",
+   "#EDE3C4",
+   "#3E8E6E"
+  ],
+  "accent": "#4FA27F"
+ },
+ {
+  "abbrev": "WAL",
+  "region": "Waltham",
+  "name": "Bears",
+  "colors": [
+   "#1B2A4A",
+   "#2E7A3E",
+   "#E8B020"
+  ],
+  "accent": "#E8B020"
+ },
+ {
+  "abbrev": "MAN",
+  "region": "Manhattan",
+  "name": "Elephants",
+  "colors": [
+   "#16294F",
+   "#C8252C",
+   "#A9B4C2"
+  ],
+  "accent": "#D8343B"
+ },
+ {
+  "abbrev": "SBK",
+  "region": "Stony Brook",
+  "name": "Stingrays",
+  "colors": [
+   "#18294D",
+   "#1C9C76",
+   "#FFFFFF"
+  ],
+  "accent": "#22B089"
+ },
+ {
+  "abbrev": "TOR",
+  "region": "Toronto",
+  "name": "Jays",
+  "colors": [
+   "#1D5BB6",
+   "#0F2650",
+   "#D7262E"
+  ],
+  "accent": "#4A8BEA"
+ },
+ {
+  "abbrev": "DUR",
+  "region": "Durham",
+  "name": "Destroyers",
+  "colors": [
+   "#E26A1C",
+   "#16244A",
+   "#FFFFFF"
+  ],
+  "accent": "#E8752A"
+ },
+ {
+  "abbrev": "GOO",
+  "region": "Gooning",
+  "name": "Gooners",
+  "colors": [
+   "#16244A",
+   "#F08A1C",
+   "#E9B820"
+  ],
+  "accent": "#F29A35"
+ },
+ {
+  "abbrev": "QNS",
+  "region": "Queens",
+  "name": "Pigeons",
+  "colors": [
+   "#F07A1A",
+   "#16244A",
+   "#8C97A3"
+  ],
+  "accent": "#F2843A"
+ },
+ {
+  "abbrev": "ROC",
+  "region": "Rochester",
+  "name": "Dragons",
+  "colors": [
+   "#3C2A5E",
+   "#C8242B",
+   "#2F5DA8"
+  ],
+  "accent": "#D6383E"
+ },
+ {
+  "abbrev": "ITH",
+  "region": "Ithaca",
+  "name": "Thunder",
+  "colors": [
+   "#13234A",
+   "#F2B51C",
+   "#8C9BB0"
+  ],
+  "accent": "#F2B51C"
+ }
+]

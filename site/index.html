@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SMP III</title>
+<meta name="description" content="SMP III: a ten-team Basketball GM league. Scores, box scores, standings and leaders.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="mark" href="#scores"><span class="dot"></span>SMP III</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#scores" data-nav="scores">Scores</a>
+      <a href="#standings" data-nav="standings">Standings</a>
+      <a href="#teams" data-nav="teams">Teams</a>
+      <a href="#leaders" data-nav="leaders">Leaders</a>
+    </nav>
+    <span class="when" id="when"></span>
+  </div>
+  <div class="logos" id="logos" aria-label="Teams"></div>
+</header>
+<main id="app" class="wrap"><p class="muted">Loading the league…</p></main>
+<footer class="foot wrap">SMP III · a Basketball GM league · results come from the commissioner's simulation · player photos from ESPN</footer>
+<script src="app.js"></script>
+</body>
+</html>
