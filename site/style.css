@@ -50,7 +50,8 @@ main { padding-block: 18px 40px; min-height: 70vh; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
 .ch { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 40px; padding: 0 14px; border-bottom: 1px solid var(--line); }
 .ch h2 { font: 700 12px/1 var(--f); letter-spacing: .07em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ch span, .ch a { font: 500 11.5px var(--m); color: var(--muted); white-space: nowrap; }
+.ch span, .ch a { font: 500 11.5px var(--m); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ch h2 { flex: 0 0 auto; max-width: 100%; }
 .ch a:hover { color: var(--ink); }
 .cb { padding: 12px 14px; }
 .note { font-size: 12px; color: var(--faint); padding: 8px 14px 10px; }
@@ -147,6 +148,17 @@ a.gc:hover { border-color: #3a424c; color: inherit; }
 .ls td.t { text-align: left; font-weight: 600; }
 .ls td:last-child, .ls th:last-child { font-weight: 700; color: var(--ink); }
 .ls .sub { font: 400 11.5px var(--m); color: var(--muted); margin-top: 6px; }
+
+/* lead story */
+.lede-top { padding: 22px 22px 18px; border-bottom: 1px solid var(--line); }
+.lede-top > * { position: relative; }
+.kick { font: 600 11px var(--m); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.lede h1 { font: 800 34px/1.1 var(--f); letter-spacing: -.025em; margin: 8px 0 10px; max-width: 22ch; text-wrap: balance; }
+.dek { font-size: 15.5px; line-height: 1.45; color: var(--muted); max-width: 62ch; }
+.art { padding: 16px 22px 6px; columns: 2 320px; column-gap: 28px; }
+.art p { break-inside: avoid; margin: 0 0 14px; font-size: 14px; line-height: 1.6; color: #C9CED5; }
+.slug { display: flex; align-items: center; gap: 6px; font: 700 12px var(--m); letter-spacing: .03em; color: var(--ink); margin-bottom: 4px; }
+.slug:hover { color: var(--gold); }
 
 /* win probability */
 .wp { padding: 10px 14px 12px; }
@@ -245,6 +257,7 @@ a.gc:hover { border-color: #3a424c; color: inherit; }
   .gt .big { font-size: 40px; }
   .ls { order: 3; }
   .when { display: none; }
+  .lede h1 { font-size: 26px; }
   .nums { grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); width: 100%; }
   .nums div:nth-child(3n+1) { border-left: 0; }
   input.q { width: 100%; }

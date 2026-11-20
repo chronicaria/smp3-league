@@ -12,3 +12,11 @@ Static, dark league site for the SMP League (SMP III) (10 teams, Basketball GM).
 `data/` (raw engine exports, which contain the secret ratings) is gitignored and must never be committed. The zengm engine itself never enters this repo (licence: private local copy only).
 
 Preview: `python3 -m http.server 8795 --directory site`.
+
+## Daily recap
+
+`python3 tools/recap_prompt.py [game_no]` prints the writing prompt plus that game day's facts. Give it to an AI, then save the JSON reply in `site/data/recaps.json` under the game number. The home page shows the recap for the latest game day if one exists.
+
+## Studies
+
+`PBP=0 SEED=n node engine/sim_half.mjs ... data/study/secret-n.json 36` runs a fast full season (`RATINGS=public` for a control). `python3 tools/study.py` reports injury luck and scoring/minutes distributions across the runs.
