@@ -4,7 +4,7 @@ usage: python3 tools/house_bids.py bids.csv TEAM [TEAM ...]  ->  house_bids.json
 Equitable: the teams snake through the best unbid players by board rank (order drawn from a fixed seed), each roster
 gets two or three players at every position, and each team spends the same total. Salaries follow rank^-0.6 within a
 team, scaled to TOTAL, which is the most a team can lead with at any point under the budget rule ($100M minus $1M per
-open spot). Length by age: 25 or younger 4 years, 26-29 3, 30-33 2, older 1."""
+open spot). Length by age: 23 or younger 5 years, 24-26 4, 27-29 3, 30-33 2, older 1."""
 import csv, json, os, random, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 A = json.load(open(os.path.join(ROOT, 'site/data/auction.json')))
@@ -15,8 +15,9 @@ for l in A['lots']:
     name[key(l['n'])] = l['id']
     if l.get('alt'): name[key(l['alt'])] = l['id']
 rows = list(csv.reader(open(sys.argv[1])))[1:]
-taken = {name.get(key(r[2])) for r in rows}
 teams = sys.argv[2:]
+FULL = {f"{x['region']} {x['name']}": x['abbrev'] for x in json.load(open(os.path.join(ROOT, 'engine/teams.json')))}
+taken = {name.get(key(r[2])) for r in rows if FULL.get(r[1]) not in teams}   # AI teams' own earlier bids do not block a player
 random.Random(20261120).shuffle(teams)
 pool = [l for l in sorted(A['lots'], key=lambda l: l['rk']) if l['id'] not in taken]
 picks = {t: [] for t in teams}
@@ -33,7 +34,7 @@ for t in teams:
     sal = [max(1, round(TOTAL * x / sum(w))) for x in w]
     while sum(sal) > TOTAL: sal[sal.index(max(sal))] -= 1
     for l, s in zip(picks[t], sal):
-        l['_bid'] = dict(team=t, player=l['n'], pid=l['id'], rk=l['rk'], pos=l['pos'], sal=s, yrs=4 if l['age'] <= 25 else 3 if l['age'] <= 29 else 2 if l['age'] <= 33 else 1)
+        l['_bid'] = dict(team=t, player=l['n'], pid=l['id'], rk=l['rk'], pos=l['pos'], sal=s, yrs=5 if l['age'] <= 23 else 4 if l['age'] <= 26 else 3 if l['age'] <= 29 else 2 if l['age'] <= 33 else 1)
 for rnd in range(ROSTER):   # submit in the order they were picked
     for t in (teams if rnd % 2 == 0 else teams[::-1]): out.append(picks[t][rnd]['_bid'])
 json.dump(out, open('house_bids.json', 'w'), ensure_ascii=False, indent=1)
