@@ -28,7 +28,7 @@ cfg = dict(
     hours=48, budget=BUDGET, roster=ROSTER, max=None,   # no salary cap per player (Andrew, 11-20); MAX only shapes the demo bids
    
     ai=['ROC', 'STO', 'QUE', 'NAS', 'DUR', 'ITH'],   # teams whose bids come from tools/house_bids.py, not an owner (labelled on the site)
-    aiSince='2026-11-20T20:14:32-05:00',   # bids from those teams stamped before this are ignored: the first AI round was redone, and Durham's one early bid was entered by mistake
+    aiSince='2026-11-21T23:04:29-05:00',   # bids from those teams stamped before this are ignored: the first AI round was redone, and Durham's one early bid was entered by mistake
     tz='-05:00',         # the bid sheet's time zone as a UTC offset (File > Settings in the sheet); -05:00 is US Eastern in winter
     csv='https://docs.google.com/spreadsheets/d/e/2PACX-1vRZzKvD55n_uNnddZ3MKZA39rNNBoQzMfbbNmZY509nTCzCFwDLVdS3z19N9bF2UkJ7iFDUwpYLS3VT/pub?output=csv',   # the form's response sheet, published as CSV
     form=dict(url='https://docs.google.com/forms/d/e/1FAIpQLSfgclHk1wATdaob-Ri4iCqYOt5YPrmRwX-EN8Iwd067kUVSBw/viewform', team='1058264156', player='1685387383', salary='357442458', years='441189916'),   # Google Form and each question's entry id (for prefilled bid links)
