@@ -26,10 +26,16 @@ const { api, g, idb, PHASE } = bbgm; const cond = { hostID: 0 };
 const L = await bbgm.realRosters.getLeague({ type: "real", season: 2027, phase: 0, randomDebuts: false, randomDebutsKeepCurrent: false, realDraftRatings: "rookie", realStats: "none", includePlayers: true });
 const teams = L.teams.slice(0, 10).map((t, tid) => ({ ...t, tid, cid: 0, did: 0, ...TEAMS[tid], imgURL: `/logos/${TEAMS[tid].abbrev}.png`, imgURLSmall: undefined, srID: undefined, retiredJerseyNumbers: [] }));
 let swapped = 0;
+// ROSTERS=<file> ({ABBREV: [{id, sal, yrs}]}, e.g. the auction's current leaders) puts those players on those teams with
+// those contracts and skips the fantasy draft; AI trades are switched off so the rosters stay as given.
+const GIVEN = process.env.ROSTERS ? new Map(Object.entries(JSON.parse(fs.readFileSync(process.env.ROSTERS))).flatMap(([ab, ps]) => ps.map((x) => [x.id, { ...x, tid: TEAMS.findIndex((t) => t.abbrev === ab) }]))) : null;
+let placed = 0;
 const players = L.players.map((p) => {
 	const q = { ...p, tid: p.tid >= 0 ? -1 : p.tid };
+	const g = GIVEN?.get(p.srID);
+	if (g && p.tid >= -1) { q.tid = g.tid; q.contract = { amount: g.sal * 1000, exp: 2026 + g.yrs }; placed++; }
 	if (q.injury?.gamesRemaining) q.injury = { ...q.injury, gamesRemaining: Math.max(1, Math.round(q.injury.gamesRemaining * SEASON)) };
-	if (q.contract) q.contract = { ...q.contract, amount: Math.max(1000, Math.round(q.contract.amount * CAP / L.gameAttributes.salaryCap / 1000) * 1000) };
+	if (q.contract && !g) q.contract = { ...q.contract, amount: Math.max(1000, Math.round(q.contract.amount * CAP / L.gameAttributes.salaryCap / 1000) * 1000) };
 	const r = secret.get(p.srID);
 	if (r && q.ratings?.length && process.env.RATINGS !== "public") { q.ratings = q.ratings.map((x, i, a) => (i === a.length - 1 ? { ...x, ...r, ovr: undefined, pot: undefined, skills: undefined } : x)); swapped++; }
 	return q;
@@ -38,6 +44,7 @@ const ga = { ...L.gameAttributes }; delete ga.numGamesConf; delete ga.numGamesDi
 Object.assign(ga, { confs: [{ cid: 0, name: "SMP" }], divs: [{ did: 0, cid: 0, name: "SMP" }], numGames: 36, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, draftType: "noLottery", numDraftRounds: 1, ...GA });
 const money = { salaryCap: CAP, minPayroll: 60000, luxuryPayroll: 115000, minContract: 1000, maxContract: 33000, salaryCapType: "soft" };
 Object.assign(ga, money, { injuries: INJURIES, injuryRate: INJ_RATE });
+if (GIVEN) ga.aiTradesFactor = 0;
 const file = { version: L.version, startingSeason: L.startingSeason, gameAttributes: ga, teams, players, draftPicks: [] };
 fs.mkdirSync(path.dirname(tmp), { recursive: true }); fs.writeFileSync(tmp, JSON.stringify(file));
 console.log(`league file: ${players.length} players, secret ratings on ${swapped}`);
@@ -47,8 +54,8 @@ const nl = await api.main.runBefore({ viewId: "newLeague", params: {}, ctxBBGM: 
 const settings = { ...nl.defaultSettings, numGames: 36, numGamesDiv: null, numGamesConf: null, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, minRosterSize: 12, maxRosterSize: 12, numDraftRounds: 1, ...money, injuries: INJURIES, injuryRate: INJ_RATE, ...GA };   // 12-round fantasy draft (rounds = minRosterSize)
 await api.main.createLeague({ name: "SMP III prototype", tid: 0, url: "/init.json", shuffleRosters: false, keptKeys: Object.keys(file).filter((k) => k !== "version"), confs: ga.confs, divs: ga.divs, teamsFromInput: teams, settings, fromFile: { gameAttributes: ga, hasRookieContracts: true, startingSeason: file.startingSeason, teams, version: file.version }, leagueCreationID: "smp3" }, cond);
 await api.main.setLocal(["autoSave", false], cond); idb.cache.stopAutoFlush();
-await api.main.startFantasyDraft([...Array(10).keys()], cond);
-await api.playMenu.untilEnd(undefined, cond);
+if (GIVEN) console.log(`rosters given: ${placed} of ${GIVEN.size} players placed`);
+else { await api.main.startFantasyDraft([...Array(10).keys()], cond); await api.playMenu.untilEnd(undefined, cond); }
 await api.playMenu.untilRegularSeason(undefined, cond);
 // Schedule: four round robins = 36 game days, all ten teams play every day, each pair meets 4 times (2 home, 2 away).
 // engine/schedule.mjs picks the fairest one it can find: home and away alternate, and every team's opponents so far
