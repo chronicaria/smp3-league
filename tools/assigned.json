@@ -1,196 +1,154 @@
 {
  "assigned": [
   {
-   "team": "WAL",
+   "team": "ROC",
    "pid": "wagnefr01",
-   "sal": 1,
-   "yrs": 1
+   "sal": 18,
+   "yrs": 4
   },
   {
-   "team": "WAL",
-   "pid": "mobleev01",
-   "sal": 1,
-   "yrs": 1
+   "team": "ROC",
+   "pid": "willija06",
+   "sal": 10,
+   "yrs": 4
   },
   {
-   "team": "CAM",
-   "pid": "murphtr02",
-   "sal": 1,
-   "yrs": 1
-  },
-  {
-   "team": "WAL",
-   "pid": "suggsja01",
-   "sal": 1,
-   "yrs": 1
-  },
-  {
-   "team": "CAM",
-   "pid": "avdijde01",
-   "sal": 1,
-   "yrs": 1
-  },
-  {
-   "team": "WAL",
-   "pid": "reaveau01",
-   "sal": 1,
+   "team": "ROC",
+   "pid": "davisan02",
+   "sal": 9,
    "yrs": 1
   },
   {
    "team": "ROC",
-   "pid": "edgecvj01",
-   "sal": 12,
+   "pid": "siakapa01",
+   "sal": 7,
+   "yrs": 2
+  },
+  {
+   "team": "ROC",
+   "pid": "bridgmi01",
+   "sal": 7,
+   "yrs": 2
+  },
+  {
+   "team": "ROC",
+   "pid": "greenja05",
+   "sal": 6,
+   "yrs": 4
+  },
+  {
+   "team": "ROC",
+   "pid": "knuepko01",
+   "sal": 6,
    "yrs": 5
-  },
-  {
-   "team": "ROC",
-   "pid": "anunoog01",
-   "sal": 9,
-   "yrs": 2
-  },
-  {
-   "team": "ROC",
-   "pid": "dosunay01",
-   "sal": 9,
-   "yrs": 3
-  },
-  {
-   "team": "ROC",
-   "pid": "willizi01",
-   "sal": 8,
-   "yrs": 3
-  },
-  {
-   "team": "ROC",
-   "pid": "butleji01",
-   "sal": 8,
-   "yrs": 1
-  },
-  {
-   "team": "ROC",
-   "pid": "bookede01",
-   "sal": 7,
-   "yrs": 2
-  },
-  {
-   "team": "ROC",
-   "pid": "brookdi01",
-   "sal": 7,
-   "yrs": 2
   },
   {
    "team": "ROC",
    "pid": "okongon01",
-   "sal": 6,
+   "sal": 5,
    "yrs": 3
   },
   {
    "team": "ROC",
-   "pid": "hardeja01",
-   "sal": 6,
-   "yrs": 1
+   "pid": "youngtr01",
+   "sal": 5,
+   "yrs": 3
   },
   {
    "team": "ROC",
-   "pid": "randlju01",
-   "sal": 6,
+   "pid": "sharpsh01",
+   "sal": 5,
+   "yrs": 4
+  },
+  {
+   "team": "ROC",
+   "pid": "vanvlfr01",
+   "sal": 5,
    "yrs": 2
   },
   {
    "team": "ROC",
-   "pid": "sarral01",
-   "sal": 5,
-   "yrs": 5
-  },
-  {
-   "team": "ROC",
-   "pid": "alexani01",
-   "sal": 5,
+   "pid": "nembhan01",
+   "sal": 4,
    "yrs": 3
   },
   {
    "team": "STO",
-   "pid": "willija06",
-   "sal": 13,
+   "pid": "mobleev01",
+   "sal": 15,
    "yrs": 4
   },
   {
    "team": "STO",
-   "pid": "daniedy01",
+   "pid": "grimequ01",
    "sal": 9,
-   "yrs": 4
+   "yrs": 3
   },
   {
    "team": "STO",
-   "pid": "moranja01",
+   "pid": "leonaka01",
+   "sal": 9,
+   "yrs": 1
+  },
+  {
+   "team": "STO",
+   "pid": "adebaba01",
+   "sal": 8,
+   "yrs": 2
+  },
+  {
+   "team": "STO",
+   "pid": "mcdanja02",
    "sal": 8,
    "yrs": 3
   },
   {
    "team": "STO",
-   "pid": "sabondo01",
+   "pid": "mitchda01",
    "sal": 7,
+   "yrs": 3
+  },
+  {
+   "team": "STO",
+   "pid": "jacksja02",
+   "sal": 7,
+   "yrs": 3
+  },
+  {
+   "team": "STO",
+   "pid": "markkla01",
+   "sal": 6,
    "yrs": 2
   },
   {
    "team": "STO",
-   "pid": "wiggiaa01",
-   "sal": 7,
-   "yrs": 3
+   "pid": "aldamsa01",
+   "sal": 6,
+   "yrs": 4
   },
   {
    "team": "STO",
-   "pid": "dortlu01",
-   "sal": 7,
-   "yrs": 3
-  },
-  {
-   "team": "STO",
-   "pid": "lillada01",
-   "sal": 7,
-   "yrs": 1
-  },
-  {
-   "team": "STO",
-   "pid": "hausesa01",
-   "sal": 7,
+   "pid": "hartjo01",
+   "sal": 5,
    "yrs": 2
   },
   {
    "team": "STO",
    "pid": "blackan01",
-   "sal": 6,
+   "sal": 4,
    "yrs": 5
   },
   {
    "team": "STO",
-   "pid": "easonta01",
-   "sal": 6,
-   "yrs": 4
-  },
-  {
-   "team": "STO",
-   "pid": "grantje01",
-   "sal": 6,
-   "yrs": 2
-  },
-  {
-   "team": "STO",
-   "pid": "clingdo01",
-   "sal": 5,
-   "yrs": 5
+   "pid": "vassede01",
+   "sal": 4,
+   "yrs": 3
   },
   {
    "team": "QUE",
-   "pid": "jamesle01",
-   "sal": 11,
-   "yrs": 1
-  },
-  {
-   "team": "QUE",
-   "pid": "moodymo01",
-   "sal": 9,
-   "yrs": 4
+   "pid": "reaveau01",
+   "sal": 13,
+   "yrs": 3
   },
   {
    "team": "QUE",
@@ -200,14 +158,8 @@
   },
   {
    "team": "QUE",
-   "pid": "camarto01",
-   "sal": 8,
-   "yrs": 3
-  },
-  {
-   "team": "QUE",
-   "pid": "herroty01",
-   "sal": 8,
+   "pid": "barrerj01",
+   "sal": 9,
    "yrs": 3
   },
   {
@@ -218,63 +170,81 @@
   },
   {
    "team": "QUE",
-   "pid": "murraja01",
+   "pid": "foxde01",
    "sal": 7,
    "yrs": 2
   },
   {
    "team": "QUE",
-   "pid": "knuepko01",
-   "sal": 6,
-   "yrs": 5
+   "pid": "ingrabr01",
+   "sal": 7,
+   "yrs": 2
   },
   {
    "team": "QUE",
-   "pid": "goberru01",
+   "pid": "harrito02",
    "sal": 6,
    "yrs": 1
   },
   {
    "team": "QUE",
-   "pid": "cowarce01",
+   "pid": "quetane01",
+   "sal": 6,
+   "yrs": 3
+  },
+  {
+   "team": "QUE",
+   "pid": "mcbrimi01",
+   "sal": 6,
+   "yrs": 3
+  },
+  {
+   "team": "QUE",
+   "pid": "mamuksa01",
+   "sal": 6,
+   "yrs": 3
+  },
+  {
+   "team": "QUE",
+   "pid": "easonta01",
    "sal": 5,
    "yrs": 4
   },
   {
    "team": "QUE",
-   "pid": "mamuksa01",
-   "sal": 5,
-   "yrs": 3
-  },
-  {
-   "team": "QUE",
-   "pid": "murrake02",
+   "pid": "washipj01",
    "sal": 5,
    "yrs": 3
   },
   {
    "team": "NAS",
-   "pid": "grimequ01",
-   "sal": 11,
-   "yrs": 3
+   "pid": "suggsja01",
+   "sal": 13,
+   "yrs": 4
   },
   {
    "team": "NAS",
-   "pid": "davisan02",
-   "sal": 10,
-   "yrs": 1
-  },
-  {
-   "team": "NAS",
-   "pid": "wallaca01",
+   "pid": "moodymo01",
    "sal": 9,
    "yrs": 4
   },
   {
    "team": "NAS",
-   "pid": "barrerj01",
+   "pid": "camarto01",
    "sal": 8,
    "yrs": 3
+  },
+  {
+   "team": "NAS",
+   "pid": "herroty01",
+   "sal": 8,
+   "yrs": 3
+  },
+  {
+   "team": "NAS",
+   "pid": "murraja01",
+   "sal": 8,
+   "yrs": 2
   },
   {
    "team": "NAS",
@@ -284,213 +254,243 @@
   },
   {
    "team": "NAS",
-   "pid": "foxde01",
+   "pid": "joneshe01",
    "sal": 7,
-   "yrs": 2
+   "yrs": 3
   },
   {
    "team": "NAS",
-   "pid": "ingrabr01",
-   "sal": 7,
-   "yrs": 2
-  },
-  {
-   "team": "NAS",
-   "pid": "harrito02",
+   "pid": "goberru01",
    "sal": 6,
    "yrs": 1
   },
   {
    "team": "NAS",
-   "pid": "powelno01",
+   "pid": "dortlu01",
    "sal": 6,
-   "yrs": 1
+   "yrs": 3
   },
   {
    "team": "NAS",
-   "pid": "boozeca02",
+   "pid": "hausesa01",
+   "sal": 6,
+   "yrs": 2
+  },
+  {
+   "team": "NAS",
+   "pid": "turnemy01",
    "sal": 5,
-   "yrs": 5
+   "yrs": 2
   },
   {
    "team": "NAS",
-   "pid": "georgpa01",
-   "sal": 5,
-   "yrs": 1
-  },
-  {
-   "team": "NAS",
-   "pid": "allenja01",
+   "pid": "murrake02",
    "sal": 5,
    "yrs": 3
   },
   {
    "team": "DUR",
-   "pid": "leonaka01",
+   "pid": "murphtr02",
+   "sal": 13,
+   "yrs": 3
+  },
+  {
+   "team": "DUR",
+   "pid": "avdijde01",
+   "sal": 13,
+   "yrs": 4
+  },
+  {
+   "team": "DUR",
+   "pid": "jamesle01",
    "sal": 11,
    "yrs": 1
   },
   {
    "team": "DUR",
-   "pid": "mcdanja02",
-   "sal": 10,
-   "yrs": 3
-  },
-  {
-   "team": "DUR",
-   "pid": "mitchda01",
-   "sal": 9,
-   "yrs": 3
-  },
-  {
-   "team": "DUR",
-   "pid": "jacksja02",
-   "sal": 8,
-   "yrs": 3
-  },
-  {
-   "team": "DUR",
-   "pid": "markkla01",
-   "sal": 8,
-   "yrs": 2
-  },
-  {
-   "team": "DUR",
-   "pid": "aldamsa01",
+   "pid": "daniedy01",
    "sal": 7,
    "yrs": 4
   },
   {
    "team": "DUR",
-   "pid": "hartjo01",
+   "pid": "moranja01",
    "sal": 7,
-   "yrs": 2
+   "yrs": 3
   },
   {
    "team": "DUR",
-   "pid": "mcbrimi01",
+   "pid": "wiggiaa01",
    "sal": 6,
    "yrs": 3
   },
   {
    "team": "DUR",
-   "pid": "turnemy01",
+   "pid": "lillada01",
+   "sal": 6,
+   "yrs": 1
+  },
+  {
+   "team": "DUR",
+   "pid": "powelno01",
+   "sal": 5,
+   "yrs": 1
+  },
+  {
+   "team": "DUR",
+   "pid": "boozeca02",
+   "sal": 5,
+   "yrs": 5
+  },
+  {
+   "team": "DUR",
+   "pid": "sarral01",
+   "sal": 5,
+   "yrs": 5
+  },
+  {
+   "team": "DUR",
+   "pid": "grantje01",
+   "sal": 5,
+   "yrs": 2
+  },
+  {
+   "team": "DUR",
+   "pid": "allenja01",
+   "sal": 5,
+   "yrs": 3
+  },
+  {
+   "team": "ITH",
+   "pid": "edgecvj01",
+   "sal": 12,
+   "yrs": 5
+  },
+  {
+   "team": "ITH",
+   "pid": "wallaca01",
+   "sal": 9,
+   "yrs": 4
+  },
+  {
+   "team": "ITH",
+   "pid": "anunoog01",
+   "sal": 9,
+   "yrs": 2
+  },
+  {
+   "team": "ITH",
+   "pid": "dosunay01",
+   "sal": 8,
+   "yrs": 3
+  },
+  {
+   "team": "ITH",
+   "pid": "willizi01",
+   "sal": 7,
+   "yrs": 3
+  },
+  {
+   "team": "ITH",
+   "pid": "butleji01",
+   "sal": 7,
+   "yrs": 1
+  },
+  {
+   "team": "ITH",
+   "pid": "sabondo01",
    "sal": 6,
    "yrs": 2
   },
   {
-   "team": "DUR",
-   "pid": "vassede01",
-   "sal": 5,
-   "yrs": 3
-  },
-  {
-   "team": "DUR",
-   "pid": "nembhan01",
-   "sal": 5,
-   "yrs": 3
-  },
-  {
-   "team": "DUR",
-   "pid": "aytonde01",
-   "sal": 5,
-   "yrs": 3
-  },
-  {
    "team": "ITH",
-   "pid": "adebaba01",
-   "sal": 9,
+   "pid": "bookede01",
+   "sal": 6,
    "yrs": 2
   },
   {
    "team": "ITH",
-   "pid": "siakapa01",
-   "sal": 9,
+   "pid": "brookdi01",
+   "sal": 6,
    "yrs": 2
   },
   {
    "team": "ITH",
-   "pid": "bridgmi01",
-   "sal": 9,
-   "yrs": 2
-  },
-  {
-   "team": "ITH",
-   "pid": "joneshe01",
-   "sal": 8,
-   "yrs": 3
-  },
-  {
-   "team": "ITH",
-   "pid": "greenja05",
-   "sal": 8,
-   "yrs": 4
-  },
-  {
-   "team": "ITH",
-   "pid": "youngtr01",
-   "sal": 7,
-   "yrs": 3
-  },
-  {
-   "team": "ITH",
-   "pid": "sharpsh01",
-   "sal": 7,
-   "yrs": 4
-  },
-  {
-   "team": "ITH",
-   "pid": "quetane01",
-   "sal": 7,
-   "yrs": 3
+   "pid": "hardeja01",
+   "sal": 6,
+   "yrs": 1
   },
   {
    "team": "ITH",
    "pid": "porzikr01",
-   "sal": 6,
-   "yrs": 2
-  },
-  {
-   "team": "ITH",
-   "pid": "vanvlfr01",
-   "sal": 6,
+   "sal": 5,
    "yrs": 2
   },
   {
    "team": "ITH",
    "pid": "gordoaa01",
-   "sal": 6,
+   "sal": 5,
    "yrs": 2
   },
   {
-   "team": "ITH",
-   "pid": "robindu01",
-   "sal": 6,
+   "team": "WAL",
+   "pid": "randlju01",
+   "sal": 5,
    "yrs": 2
+  },
+  {
+   "team": "WAL",
+   "pid": "cowarce01",
+   "sal": 5,
+   "yrs": 4
+  },
+  {
+   "team": "WAL",
+   "pid": "alexani01",
+   "sal": 5,
+   "yrs": 3
+  },
+  {
+   "team": "WAL",
+   "pid": "irvinky01",
+   "sal": 4,
+   "yrs": 1
+  },
+  {
+   "team": "CAM",
+   "pid": "georgpa01",
+   "sal": 5,
+   "yrs": 1
+  },
+  {
+   "team": "CAM",
+   "pid": "podzibr01",
+   "sal": 5,
+   "yrs": 4
   }
  ],
  "wins": {
-  "CAM": 25.333333333333332,
-  "WAL": 27.583333333333332,
-  "NAS": 12.833333333333334,
-  "STO": 13.333333333333334,
-  "TOR": 27.166666666666668,
-  "DUR": 12.166666666666666,
-  "GOO": 25.833333333333332,
-  "QUE": 12.333333333333334,
-  "ROC": 12.333333333333334,
-  "ITH": 11.083333333333334
+  "CAM": 20.666666666666668,
+  "WAL": 19.055555555555557,
+  "NAS": 13.555555555555555,
+  "STO": 14.833333333333334,
+  "TOR": 26.666666666666668,
+  "DUR": 16,
+  "GOO": 26.27777777777778,
+  "QUE": 13.88888888888889,
+  "ROC": 15,
+  "ITH": 14.055555555555555
  },
  "margin": {
-  "CAM": 8.458333333333334,
-  "WAL": 11.685185185185185,
-  "NAS": -5.351851851851852,
-  "STO": -5.541666666666667,
-  "TOR": 10.037037037037038,
-  "DUR": -6.814814814814815,
-  "GOO": 8.331018518518519,
-  "QUE": -7.458333333333334,
-  "ROC": -5.724537037037037,
-  "ITH": -7.62037037037037
+  "CAM": 2.20679012345679,
+  "WAL": 0.566358024691358,
+  "NAS": -3.138888888888889,
+  "STO": -2.5246913580246915,
+  "TOR": 9.239197530864198,
+  "DUR": -2.5925925925925926,
+  "GOO": 7.993827160493828,
+  "QUE": -4.3580246913580245,
+  "ROC": -3.7808641975308643,
+  "ITH": -3.611111111111111
  }
 }

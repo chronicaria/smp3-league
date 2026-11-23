@@ -3,8 +3,9 @@ usage: python3 tools/balance_ai.py state.json FILL_TEAM,... AI_TEAM,...   (state
 Writes tools/assigned.json ([{team, pid, sal, yrs}], no ratings) and prints each round. Runs only on Andrew's Mac:
 it reads the private ratings and drives engine/sim_half.mjs (ROSTERS mode).
 
-1. Short human teams take the best unsigned players by board rank at $1M for one year, neediest team first (the auction rule).
-2. The AI teams share the next 12-per-team best unsigned players, two or three at each position, starting from a snake.
+1. One draft of the unsigned players for every team with open spots: AI teams snake, two or three per position; a short
+   human team joins in the round matching its next open roster spot and picks last, at the going salary for that rank.
+2. (same draft)
 3. Simulate SEEDS seasons, then swap same-position players from the strongest AI teams to the weakest and repeat until
    the AI teams' average scoring margins sit within TOL points of each other. A player's worth for choosing swaps is his
    overall scaled by the share of games he actually played in the simulations (so an injured star counts for little)."""
@@ -12,7 +13,7 @@ import json, math, os, statistics, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET = os.path.expanduser('~/Code/rome-kits/Knowledge/Sports/Basketball/SMP III/pool/secret/smp3_ratings.json')
 NODE, ZENGM = os.path.expanduser('~/.local/node24/bin/node'), os.path.expanduser('~/Code/zengm-smp3')
-SEEDS, PAR, TOL, ROUNDS, POS = 12, 6, 2.0, 9, ['PG', 'SG', 'SF', 'PF', 'C']
+SEEDS, PAR, TOL, ROUNDS, POS = 18, 9, 2.0, 7, ['PG', 'SG', 'SF', 'PF', 'C']
 A = json.load(open(os.path.join(ROOT, 'site/data/auction.json'))); LOT = {l['id']: l for l in A['lots']}
 OVR = {p['id']: p['secret_ovr'] for p in json.load(open(SECRET))['players']}
 state = json.load(open(sys.argv[1])); FILL = sys.argv[2].split(','); AI = sys.argv[3].split(',')
@@ -20,19 +21,19 @@ R = {t: [dict(x) for x in T['leads']] for t, T in state['teams'].items()}
 taken = {x['id'] for v in R.values() for x in v}
 free = [l for l in sorted(A['lots'], key=lambda l: l['rk']) if l['id'] not in taken]
 assigned = []
-while True:   # 1. human teams first
-    need = [t for t in FILL if len(R[t]) < A['roster']]
-    if not need: break
-    t = min(need, key=lambda t: (len(R[t]), sum(x['sal'] for x in R[t]))); l = free.pop(0)
-    R[t].append(dict(id=l['id'], sal=1, yrs=1)); assigned.append(dict(team=t, pid=l['id'], sal=1, yrs=1))
-    print(f"fill {t}: #{l['rk']} {l['n']} ({l['pos']})")
-# 2. AI pool and snake
-picks = {t: [] for t in AI}
+# 1 + 2. One draft for everybody with open spots. A team's k-th pick fills its k-th roster spot, so a human team that
+# signed 8 players joins in round 9; human teams pick last in every round (Andrew, 23 Nov: no free stars for short rosters).
+picks = {t: [] for t in AI}; fills = {t: [] for t in FILL}
+def choose(have_ids):
+    have = {p: sum(1 for x in have_ids if LOT[x]['pos'] == p) for p in POS}; need = [p for p in POS if have[p] < 2]; left = A['roster'] - len(have_ids)
+    l = next((x for x in free if have[x['pos']] < 3 and (x['pos'] in need or left > sum(2 - have[p] for p in need))), None) or next(x for x in free if have[x['pos']] < 4)
+    free.remove(l); return l
 for rnd in range(A['roster']):
-    for t in (AI if rnd % 2 == 0 else AI[::-1]):
-        have = {p: sum(1 for x in picks[t] if LOT[x]['pos'] == p) for p in POS}; need = [p for p in POS if have[p] < 2]; left = A['roster'] - len(picks[t])
-        l = next(x for x in free if have[x['pos']] < 3 and (x['pos'] in need or left > sum(2 - have[p] for p in need)))
-        free.remove(l); picks[t].append(l['id'])
+    for t in (AI if rnd % 2 == 0 else AI[::-1]): picks[t].append(choose(picks[t])['id'])
+    for t in FILL:
+        if len(R[t]) <= rnd:
+            l = choose([x['id'] for x in R[t]]); R[t].append(dict(id=l['id'], sal=1, yrs=1)); fills[t].append(l)
+            print(f"round {rnd + 1} fill {t}: #{l['rk']} {l['n']} ({l['pos']})", flush=True)
 
 def sim(tag):
     rost = dict(R); rost.update({t: [dict(id=i, sal=1, yrs=1) for i in picks[t]] for t in AI})
@@ -94,4 +95,12 @@ for t in AI:
     while sum(sal) > 88: sal[sal.index(max(sal))] -= 1
     for l, s in zip(ls, sal): assigned.append(dict(team=t, pid=l['id'], sal=s, yrs=5 if l['age'] <= 23 else 4 if l['age'] <= 26 else 3 if l['age'] <= 29 else 2 if l['age'] <= 33 else 1))
     print(t, ' '.join(f"{p}:{sum(1 for l in ls if l['pos'] == p)}" for p in POS), '|', ', '.join(f"{l['n']} ${s}M" for l, s in zip(ls, sal)))
+# human fills at the going rate: the AI teams' price for a player of that board rank, within what the team can still spend
+K = statistics.median(x['sal'] * LOT[x['pid']]['rk'] ** 0.6 for x in assigned)
+for t in FILL:
+    spent = sum(x['sal'] for x in R[t] if x['id'] not in {l['id'] for l in fills[t]}); todo = len(fills[t])
+    for l in fills[t]:
+        todo -= 1; sal = max(1, min(round(K * l['rk'] ** -0.6), A['budget'] - spent - todo)); spent += sal
+        assigned.append(dict(team=t, pid=l['id'], sal=sal, yrs=5 if l['age'] <= 23 else 4 if l['age'] <= 26 else 3 if l['age'] <= 29 else 2 if l['age'] <= 33 else 1))
+        print(f"fill {t}: {l['n']} ${sal}M")
 json.dump(dict(assigned=assigned, wins=wins, margin=marg), open(os.path.join(ROOT, 'tools/assigned.json'), 'w'), ensure_ascii=False, indent=1)
