@@ -24,7 +24,7 @@ lots = [{k: v for k, v in dict(id=p['id'], rk=p['rk'], n=p['n'], pos=p['pos'], a
 # ---- settings Andrew fills in when the real auction opens (see README "Auction") ----
 cfg = dict(
     start='2026-11-20T12:00:00-05:00',   # bids stamped before this are refused; None = demo mode
-    close='2026-11-22T23:59:59-05:00',   # Sunday night, Eastern; overrides start + hours
+    close='2026-11-23T00:00:00-05:00',   # Sunday night, Eastern; overrides start + hours
     hours=48, budget=BUDGET, roster=ROSTER, max=None,   # no salary cap per player (Andrew, 11-20); MAX only shapes the demo bids
    
     ai=['ROC', 'STO', 'QUE', 'NAS', 'DUR', 'ITH'],   # teams whose bids come from tools/house_bids.py, not an owner (labelled on the site)
