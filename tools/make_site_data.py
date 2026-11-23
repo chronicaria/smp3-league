@@ -13,7 +13,9 @@ board = {p['id']: p for p in json.load(open(BOARD))}
 TEAMS = json.load(open(os.path.join(ROOT, 'engine/teams.json')))
 STAT = ['gs', 'min', 'pts', 'fg', 'fga', 'tp', 'tpa', 'ft', 'fta', 'orb', 'drb', 'ast', 'tov', 'stl', 'blk', 'pf', 'pm',
         'fgAtRim', 'fgaAtRim', 'fgLowPost', 'fgaLowPost', 'fgMidRange', 'fgaMidRange']
-teams = [dict(tid=i, abbrev=t['abbrev'], region=t['region'], name=t['name'], color=t['colors'][0], accent=t['accent'], logo=f"logos/{t['abbrev']}.png", arena=t['arena'], banners=t.get('banners', [])) for i, t in enumerate(TEAMS)]
+_pre = os.path.join(ROOT, 'engine/preseason.json')   # tools/preseason_prior.py: simulated scoring margin per team, for projections before games exist
+PRIOR = json.load(open(_pre)) if os.path.exists(_pre) else {}
+teams = [dict(tid=i, abbrev=t['abbrev'], region=t['region'], name=t['name'], color=t['colors'][0], accent=t['accent'], logo=f"logos/{t['abbrev']}.png", banners=t.get('banners', []), prior=PRIOR.get(t['abbrev'])) for i, t in enumerate(TEAMS)]
 used = set(); games = []; day_of = {}
 for g in sorted((x for x in E.get('games', []) if x['season'] == season), key=lambda x: x['gid']):
     h, a = g['teams']   # BBGM: teams[0] is home
@@ -47,7 +49,7 @@ for p in E['players']:
         age=season - p['born']['year'], ht=p.get('hgt'), wt=p.get('weight'), espn=b.get('espn'), num=p.get('jerseyNumber'),
         rk=True if d.get('year') == season - 1 else None, so=True if d.get('year') == season - 2 and d.get('round') == 1 else None,
         sal=max(1, round(p['contract']['amount'] * PAY / 1000)) if p['tid'] >= 0 else None, exp=p['contract']['exp'] if p['tid'] >= 0 else None,
-        ls=[b['s'][k] for k in ('pts', 'reb', 'ast', 'g')] if b.get('s') else None, adv=adv(p),
+        ro=p.get('rosterOrder') if p['tid'] >= 0 else None, adv=adv(p),
         smp=pick.get(p['pid']), inj=[('Injury' if inj['type'] == 'Injured' else inj['type']), inj['gamesRemaining']] if inj.get('gamesRemaining') else None).items() if v is not None})
 # free agents: the 150 best by draft-board order, with last season's line (no ratings, no asking price yet)
 fa = []

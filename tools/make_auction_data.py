@@ -19,7 +19,7 @@ for _ in range(60):
     lo, hi = (mid, hi) if sum(curve(mid)) < 1000 else (lo, mid)
 market = lambda r: min(MAX, hi * r ** -0.6)
 lots = [{k: v for k, v in dict(id=p['id'], rk=p['rk'], n=p['n'], pos=p['pos'], age=p['age'], ht=p.get('ht'), espn=p.get('espn'),
-                               open=1, alt=None if p['n'].isascii() else p['n'].encode('utf-8').decode('mac_roman'), s=[p['s'].get(k) for k in ('g', 'mp', 'pts', 'reb', 'ast', 'stl', 'blk', 'fg', 'tp', 'ft')] if p.get('s') else None).items() if v is not None} for p in board]
+                               open=1, alt=None if p['n'].isascii() else p['n'].encode('utf-8').decode('mac_roman')).items() if v is not None} for p in board]
 
 # ---- settings Andrew fills in when the real auction opens (see README "Auction") ----
 cfg = dict(

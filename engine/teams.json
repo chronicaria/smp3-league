@@ -9,7 +9,6 @@
    "#3E8E6E"
   ],
   "accent": "#4FA27F",
-  "arena": "The Dome",
   "banners": []
  },
  {
@@ -22,7 +21,6 @@
    "#E8B020"
   ],
   "accent": "#E8B020",
-  "arena": "The Den",
   "banners": []
  },
  {
@@ -35,7 +33,6 @@
    "#A9B4C2"
   ],
   "accent": "#D8343B",
-  "arena": "The Anchor",
   "banners": []
  },
  {
@@ -48,7 +45,6 @@
    "#FFFFFF"
   ],
   "accent": "#22B089",
-  "arena": "The Reef",
   "banners": []
  },
  {
@@ -61,7 +57,6 @@
    "#D7262E"
   ],
   "accent": "#4A8BEA",
-  "arena": "The Nest",
   "banners": []
  },
  {
@@ -74,7 +69,6 @@
    "#FFFFFF"
   ],
   "accent": "#E8752A",
-  "arena": "K-Ville",
   "banners": []
  },
  {
@@ -87,7 +81,6 @@
    "#E9B820"
   ],
   "accent": "#F29A35",
-  "arena": "The Goon Cave",
   "banners": []
  },
  {
@@ -100,7 +93,6 @@
    "#8C97A3"
   ],
   "accent": "#F2843A",
-  "arena": "The Coop",
   "banners": []
  },
  {
@@ -113,7 +105,6 @@
    "#2F5DA8"
   ],
   "accent": "#D6383E",
-  "arena": "The Lair",
   "banners": []
  },
  {
@@ -126,7 +117,6 @@
    "#8C9BB0"
   ],
   "accent": "#F2B51C",
-  "arena": "The Slope",
   "banners": []
  }
 ]
