@@ -33,6 +33,8 @@ cfg = dict(
     csv='https://docs.google.com/spreadsheets/d/e/2PACX-1vRZzKvD55n_uNnddZ3MKZA39rNNBoQzMfbbNmZY509nTCzCFwDLVdS3z19N9bF2UkJ7iFDUwpYLS3VT/pub?output=csv',   # the form's response sheet, published as CSV
     form=dict(url='https://docs.google.com/forms/d/e/1FAIpQLSfgclHk1wATdaob-Ri4iCqYOt5YPrmRwX-EN8Iwd067kUVSBw/viewform', team='1058264156', player='1685387383', salary='357442458', years='441189916'),   # Google Form and each question's entry id (for prefilled bid links)
     teams=TEAMS, lots=lots)
+_asg = os.path.join(ROOT, 'tools/assigned.json')   # written by tools/balance_ai.py after the deadline
+if os.path.exists(_asg): cfg['assigned'] = json.load(open(_asg))['assigned']
 json.dump(cfg, open(os.path.join(ROOT, 'site/data/auction.json'), 'w'), separators=(',', ':'), ensure_ascii=False)
 
 # ---- demo bids: ten teams with their own noisy valuations bid for about 20 hours ----

@@ -18,7 +18,7 @@ const INJ_RATE = 0.000125 / SEASON * 1.4;   // x1.4 over stock so about a tenth 
 const CAP = 100000;   // $100M salary cap (BBGM stores thousands); every contract scales with it and rounds to $1M
 const TEAMS = JSON.parse(fs.readFileSync(new URL("./teams.json", import.meta.url)));
 const secret = new Map(JSON.parse(fs.readFileSync(secretFile)).players.map((p) => [p.id, p.ratings]));
-const tmp = path.resolve("data/.league-init.json");
+const tmp = path.resolve(`data/.league-init-${process.pid}.json`);   // per process, so several sims can run at once
 const { bbgm } = await boot({ zengmDir, extraFiles: { "/init.json": tmp } });
 const { api, g, idb, PHASE } = bbgm; const cond = { hostID: 0 };
 
@@ -113,4 +113,5 @@ if (process.env.PBP !== "0") { fs.writeFileSync(outFile.replace(/\.json$/, "-pbp
 await api.main.setLocal(["autoSave", true], cond);
 fs.writeFileSync(outFile, JSON.stringify(await exportLeague(bbgm, "SMP III prototype")));
 console.log(`wrote ${outFile} ${(fs.statSync(outFile).size / 1e6).toFixed(1)} MB`);
+fs.rmSync(tmp, { force: true });
 process.exit(0);
