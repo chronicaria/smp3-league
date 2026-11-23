@@ -1,0 +1,622 @@
+{
+"CAM": [
+{
+"id": "tatumja01",
+"sal": 8,
+"yrs": 5
+},
+{
+"id": "thompau01",
+"sal": 8,
+"yrs": 5
+},
+{
+"id": "curryst01",
+"sal": 5,
+"yrs": 2
+},
+{
+"id": "brunsja01",
+"sal": 6,
+"yrs": 4
+},
+{
+"id": "jeromty01",
+"sal": 1,
+"yrs": 3
+},
+{
+"id": "embiijo01",
+"sal": 1,
+"yrs": 2
+},
+{
+"id": "holmgch01",
+"sal": 8,
+"yrs": 5
+},
+{
+"id": "millebr02",
+"sal": 2,
+"yrs": 5
+},
+{
+"id": "murraco01",
+"sal": 1,
+"yrs": 5
+},
+{
+"id": "gilgesh01",
+"sal": 21,
+"yrs": 5
+},
+{
+"id": "georgpa01",
+"sal": 5,
+"yrs": 1
+},
+{
+"id": "podzibr01",
+"sal": 5,
+"yrs": 4
+}
+],
+"WAL": [
+{
+"id": "johnsja05",
+"sal": 6,
+"yrs": 3
+},
+{
+"id": "flaggco01",
+"sal": 15,
+"yrs": 4
+},
+{
+"id": "banede01",
+"sal": 8,
+"yrs": 4
+},
+{
+"id": "edeyza01",
+"sal": 1,
+"yrs": 5
+},
+{
+"id": "rolliry01",
+"sal": 4,
+"yrs": 5
+},
+{
+"id": "wembavi01",
+"sal": 33,
+"yrs": 5
+},
+{
+"id": "thompam01",
+"sal": 9,
+"yrs": 5
+},
+{
+"id": "giddejo01",
+"sal": 1,
+"yrs": 5
+},
+{
+"id": "randlju01",
+"sal": 5,
+"yrs": 2
+},
+{
+"id": "cowarce01",
+"sal": 5,
+"yrs": 4
+},
+{
+"id": "alexani01",
+"sal": 5,
+"yrs": 3
+},
+{
+"id": "irvinky01",
+"sal": 4,
+"yrs": 1
+}
+],
+"NAS": [
+{
+"id": "suggsja01",
+"sal": 13,
+"yrs": 4
+},
+{
+"id": "moodymo01",
+"sal": 9,
+"yrs": 4
+},
+{
+"id": "camarto01",
+"sal": 8,
+"yrs": 3
+},
+{
+"id": "herroty01",
+"sal": 8,
+"yrs": 3
+},
+{
+"id": "murraja01",
+"sal": 8,
+"yrs": 2
+},
+{
+"id": "quickim01",
+"sal": 7,
+"yrs": 3
+},
+{
+"id": "joneshe01",
+"sal": 7,
+"yrs": 3
+},
+{
+"id": "goberru01",
+"sal": 6,
+"yrs": 1
+},
+{
+"id": "dortlu01",
+"sal": 6,
+"yrs": 3
+},
+{
+"id": "hausesa01",
+"sal": 6,
+"yrs": 2
+},
+{
+"id": "turnemy01",
+"sal": 5,
+"yrs": 2
+},
+{
+"id": "murrake02",
+"sal": 5,
+"yrs": 3
+}
+],
+"STO": [
+{
+"id": "mobleev01",
+"sal": 15,
+"yrs": 4
+},
+{
+"id": "grimequ01",
+"sal": 9,
+"yrs": 3
+},
+{
+"id": "leonaka01",
+"sal": 9,
+"yrs": 1
+},
+{
+"id": "adebaba01",
+"sal": 8,
+"yrs": 2
+},
+{
+"id": "mcdanja02",
+"sal": 8,
+"yrs": 3
+},
+{
+"id": "mitchda01",
+"sal": 7,
+"yrs": 3
+},
+{
+"id": "jacksja02",
+"sal": 7,
+"yrs": 3
+},
+{
+"id": "markkla01",
+"sal": 6,
+"yrs": 2
+},
+{
+"id": "aldamsa01",
+"sal": 6,
+"yrs": 4
+},
+{
+"id": "hartjo01",
+"sal": 5,
+"yrs": 2
+},
+{
+"id": "blackan01",
+"sal": 4,
+"yrs": 5
+},
+{
+"id": "vassede01",
+"sal": 4,
+"yrs": 3
+}
+],
+"TOR": [
+{
+"id": "brownja02",
+"sal": 5,
+"yrs": 5
+},
+{
+"id": "duranke01",
+"sal": 4,
+"yrs": 2
+},
+{
+"id": "mitchdo01",
+"sal": 4,
+"yrs": 4
+},
+{
+"id": "portemi01",
+"sal": 5,
+"yrs": 4
+},
+{
+"id": "allengr01",
+"sal": 2,
+"yrs": 3
+},
+{
+"id": "barnesc01",
+"sal": 11,
+"yrs": 5
+},
+{
+"id": "halibty01",
+"sal": 13,
+"yrs": 3
+},
+{
+"id": "durenja01",
+"sal": 2,
+"yrs": 3
+},
+{
+"id": "ballla01",
+"sal": 6,
+"yrs": 5
+},
+{
+"id": "cunnica01",
+"sal": 9,
+"yrs": 5
+},
+{
+"id": "townska01",
+"sal": 9,
+"yrs": 4
+},
+{
+"id": "doncilu01",
+"sal": 25,
+"yrs": 5
+}
+],
+"DUR": [
+{
+"id": "murphtr02",
+"sal": 13,
+"yrs": 3
+},
+{
+"id": "avdijde01",
+"sal": 13,
+"yrs": 4
+},
+{
+"id": "jamesle01",
+"sal": 11,
+"yrs": 1
+},
+{
+"id": "daniedy01",
+"sal": 7,
+"yrs": 4
+},
+{
+"id": "moranja01",
+"sal": 7,
+"yrs": 3
+},
+{
+"id": "wiggiaa01",
+"sal": 6,
+"yrs": 3
+},
+{
+"id": "lillada01",
+"sal": 6,
+"yrs": 1
+},
+{
+"id": "powelno01",
+"sal": 5,
+"yrs": 1
+},
+{
+"id": "boozeca02",
+"sal": 5,
+"yrs": 5
+},
+{
+"id": "sarral01",
+"sal": 5,
+"yrs": 5
+},
+{
+"id": "grantje01",
+"sal": 5,
+"yrs": 2
+},
+{
+"id": "allenja01",
+"sal": 5,
+"yrs": 3
+}
+],
+"GOO": [
+{
+"id": "harpedy01",
+"sal": 3,
+"yrs": 5
+},
+{
+"id": "sengual01",
+"sal": 10,
+"yrs": 3
+},
+{
+"id": "smithja05",
+"sal": 10,
+"yrs": 4
+},
+{
+"id": "banchpa01",
+"sal": 8,
+"yrs": 3
+},
+{
+"id": "kesslwa01",
+"sal": 6,
+"yrs": 3
+},
+{
+"id": "acuffda01",
+"sal": 5,
+"yrs": 5
+},
+{
+"id": "peterda02",
+"sal": 3,
+"yrs": 5
+},
+{
+"id": "garlada01",
+"sal": 2,
+"yrs": 3
+},
+{
+"id": "edwaran01",
+"sal": 12,
+"yrs": 4
+},
+{
+"id": "jokicni01",
+"sal": 10,
+"yrs": 3
+},
+{
+"id": "maxeyty01",
+"sal": 10,
+"yrs": 3
+},
+{
+"id": "antetgi01",
+"sal": 6,
+"yrs": 3
+}
+],
+"QUE": [
+{
+"id": "reaveau01",
+"sal": 13,
+"yrs": 3
+},
+{
+"id": "whitede01",
+"sal": 9,
+"yrs": 2
+},
+{
+"id": "barrerj01",
+"sal": 9,
+"yrs": 3
+},
+{
+"id": "castlst01",
+"sal": 8,
+"yrs": 5
+},
+{
+"id": "foxde01",
+"sal": 7,
+"yrs": 2
+},
+{
+"id": "ingrabr01",
+"sal": 7,
+"yrs": 2
+},
+{
+"id": "harrito02",
+"sal": 6,
+"yrs": 1
+},
+{
+"id": "quetane01",
+"sal": 6,
+"yrs": 3
+},
+{
+"id": "mcbrimi01",
+"sal": 6,
+"yrs": 3
+},
+{
+"id": "mamuksa01",
+"sal": 6,
+"yrs": 3
+},
+{
+"id": "easonta01",
+"sal": 5,
+"yrs": 4
+},
+{
+"id": "washipj01",
+"sal": 5,
+"yrs": 3
+}
+],
+"ROC": [
+{
+"id": "wagnefr01",
+"sal": 18,
+"yrs": 4
+},
+{
+"id": "willija06",
+"sal": 10,
+"yrs": 4
+},
+{
+"id": "davisan02",
+"sal": 9,
+"yrs": 1
+},
+{
+"id": "siakapa01",
+"sal": 7,
+"yrs": 2
+},
+{
+"id": "bridgmi01",
+"sal": 7,
+"yrs": 2
+},
+{
+"id": "greenja05",
+"sal": 6,
+"yrs": 4
+},
+{
+"id": "knuepko01",
+"sal": 6,
+"yrs": 5
+},
+{
+"id": "okongon01",
+"sal": 5,
+"yrs": 3
+},
+{
+"id": "youngtr01",
+"sal": 5,
+"yrs": 3
+},
+{
+"id": "sharpsh01",
+"sal": 5,
+"yrs": 4
+},
+{
+"id": "vanvlfr01",
+"sal": 5,
+"yrs": 2
+},
+{
+"id": "nembhan01",
+"sal": 4,
+"yrs": 3
+}
+],
+"ITH": [
+{
+"id": "edgecvj01",
+"sal": 12,
+"yrs": 5
+},
+{
+"id": "wallaca01",
+"sal": 9,
+"yrs": 4
+},
+{
+"id": "anunoog01",
+"sal": 9,
+"yrs": 2
+},
+{
+"id": "dosunay01",
+"sal": 8,
+"yrs": 3
+},
+{
+"id": "willizi01",
+"sal": 7,
+"yrs": 3
+},
+{
+"id": "butleji01",
+"sal": 7,
+"yrs": 1
+},
+{
+"id": "sabondo01",
+"sal": 6,
+"yrs": 2
+},
+{
+"id": "bookede01",
+"sal": 6,
+"yrs": 2
+},
+{
+"id": "brookdi01",
+"sal": 6,
+"yrs": 2
+},
+{
+"id": "hardeja01",
+"sal": 6,
+"yrs": 1
+},
+{
+"id": "porzikr01",
+"sal": 5,
+"yrs": 2
+},
+{
+"id": "gordoaa01",
+"sal": 5,
+"yrs": 2
+}
+]
+}

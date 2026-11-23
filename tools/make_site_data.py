@@ -15,7 +15,7 @@ STAT = ['gs', 'min', 'pts', 'fg', 'fga', 'tp', 'tpa', 'ft', 'fta', 'orb', 'drb',
         'fgAtRim', 'fgaAtRim', 'fgLowPost', 'fgaLowPost', 'fgMidRange', 'fgaMidRange']
 teams = [dict(tid=i, abbrev=t['abbrev'], region=t['region'], name=t['name'], color=t['colors'][0], accent=t['accent'], logo=f"logos/{t['abbrev']}.png", arena=t['arena'], banners=t.get('banners', [])) for i, t in enumerate(TEAMS)]
 used = set(); games = []; day_of = {}
-for g in sorted((x for x in E['games'] if x['season'] == season), key=lambda x: x['gid']):
+for g in sorted((x for x in E.get('games', []) if x['season'] == season), key=lambda x: x['gid']):
     h, a = g['teams']   # BBGM: teams[0] is home
     day_of[g['gid']] = g['day']
     def side(t):
@@ -38,9 +38,7 @@ def adv(p):
     st = [x for x in p.get('stats', []) if x['season'] == season and not x['playoffs']]
     if not st or not st[-1].get('gp'): return None
     x = st[-1]; return [round(x['per'], 1), round(x['ows'] + x['dws'], 2), round(x['dws'], 2), round(x['usgp'], 1), round(x['ewa'], 2), round(x['vorp'], 2), round(x['obpm'], 1), round(x['dbpm'], 1)]
-# Salaries: the prototype still carries real contracts, which sum to about twice the league's $100M cap. Scale them so the
-# league's total payroll is 10 x $100M and round to $1M; the auction will replace them with real SMP contracts.
-PAY = 100000 * len(TEAMS) / sum(p['contract']['amount'] for p in E['players'] if p['tid'] >= 0)
+PAY = 1   # since the auction (Nov 2026) every rostered player has a real SMP contract; no rescaling
 players = []
 for p in E['players']:
     if p['tid'] < 0 and p['pid'] not in used: continue
@@ -78,7 +76,7 @@ def fit_wp():
     extra = os.path.join(os.path.dirname(sys.argv[1]), 'cal', 'wp.json')
     if os.path.exists(extra): srcs.append((json.load(open(extra)), json.load(open(extra.replace('.json', '-pbp.json')))))
     for ex, pb in srcs:
-        for g in ex['games']:
+        for g in ex.get('games', []):
             tl = [[0, 0, 0]] + pb[str(g['gid'])]; fin = g['teams'][0]['pts'] - g['teams'][1]['pts']; i = 0
             for t in list(range(0, 2880, 30)) + [2700, 2760, 2790, 2820, 2840, 2850, 2860, 2866, 2872, 2876]:
                 while i + 1 < len(tl) and tl[i + 1][0] <= t: i += 1
@@ -91,7 +89,7 @@ def fit_wp():
     late = [(fr, l, f) for fr, l, f in rows if fr <= 180 / 2880 and f != 0]
     def ll(k): return sum(math.log(max(1e-9, phi((l + hca * fr) / math.sqrt(sd * sd * fr + k)) if f > 0 else 1 - phi((l + hca * fr) / math.sqrt(sd * sd * fr + k)))) for fr, l, f in late)
     kappa = max((x / 4 for x in range(0, 61)), key=ll)
-    return dict(sd=round(sd, 2), hca=round(hca, 2), kappa=kappa, games=sum(len(ex['games']) for ex, _ in srcs))
+    return dict(sd=round(sd, 2), hca=round(hca, 2), kappa=kappa, games=sum(len(ex.get('games', [])) for ex, _ in srcs))
 wp = fit_wp()
 lineups = {tid: [[*map(int, k.split(',')), round(v[0]), v[1], v[2]] for k, v in d.items() if v[0] >= 20] for tid, d in LINE.items()}
 sched = [dict(gid=s['gid'], day=s['day'], home=s['homeTid'], away=s['awayTid']) for s in E['schedule'] if s['homeTid'] >= 0]
