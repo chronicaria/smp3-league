@@ -51,10 +51,12 @@ console.log(`league file: ${players.length} players, secret ratings on ${swapped
 
 // 2. create, draft (10 rounds), sim
 const nl = await api.main.runBefore({ viewId: "newLeague", params: {}, ctxBBGM: {}, updateEvents: ["firstRun"], prevData: {} }, cond);
-const settings = { ...nl.defaultSettings, numGames: 36, numGamesDiv: null, numGamesConf: null, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, minRosterSize: 12, maxRosterSize: 12, numDraftRounds: 1, ...money, injuries: INJURIES, injuryRate: INJ_RATE, ...GA };   // 12-round fantasy draft (rounds = minRosterSize)
+const settings = { ...nl.defaultSettings, numGames: 36, numGamesDiv: null, numGamesConf: null, numGamesPlayoffSeries: [5, 5], numPlayoffByes: 0, playIn: false, minRosterSize: 12, maxRosterSize: 12, numDraftRounds: 1, ...money, injuries: INJURIES, injuryRate: INJ_RATE, ...GA, ...(GIVEN ? { aiTradesFactor: 0 } : {}) };   // 12-round fantasy draft (rounds = minRosterSize); no computer trades once owners hold rosters
 await api.main.createLeague({ name: "SMP III prototype", tid: 0, url: "/init.json", shuffleRosters: false, keptKeys: Object.keys(file).filter((k) => k !== "version"), confs: ga.confs, divs: ga.divs, teamsFromInput: teams, settings, fromFile: { gameAttributes: ga, hasRookieContracts: true, startingSeason: file.startingSeason, teams, version: file.version }, leagueCreationID: "smp3" }, cond);
 await api.main.setLocal(["autoSave", false], cond); idb.cache.stopAutoFlush();
-if (GIVEN) console.log(`rosters given: ${placed} of ${GIVEN.size} players placed`);
+// Owners hold these rosters, so the computer must not touch them: marking every team as user-run stops the engine signing
+// free agents or trading for them (it still sets lineups, because each team keeps its roster auto-sorted).
+if (GIVEN) { await bbgm.league.setGameAttributes({ userTids: [...Array(10).keys()] }); console.log(`rosters given: ${placed} of ${GIVEN.size} players placed; all teams user-run`); }
 else { await api.main.startFantasyDraft([...Array(10).keys()], cond); await api.playMenu.untilEnd(undefined, cond); }
 await api.playMenu.untilRegularSeason(undefined, cond);
 // Schedule: four round robins = 36 game days, all ten teams play every day, each pair meets 4 times (2 home, 2 away).
