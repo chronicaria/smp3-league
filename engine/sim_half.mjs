@@ -71,7 +71,7 @@ const target = 5 * Number(half);   // five games per game day
 // Play-by-play: the engine only records it for one game at a time (game.play(..., gidOneGame, playByPlay)) and hands it to the UI,
 // so sim each game on its own and catch the realtimeUpdate message.
 const PTS = (type) => (type === "ft" ? 1 : type.startsWith("tp") ? 3 : 2);
-const pbp = {}; let caught = null;
+const pbp = {}, raw = {}; let caught = null;
 const lineups = {};   // tid -> "pid,pid,pid,pid,pid" -> [seconds, points for, points against]
 const post = globalThis.postMessage;
 globalThis.postMessage = (msg) => { const raw = Array.isArray(msg) && msg[0] === 0 && msg[2]?.[0] === "realtimeUpdate" ? msg[2][3] : null; if (raw?.playByPlay) caught = raw; post(msg); };
@@ -93,6 +93,7 @@ while (g.get("phase") === PHASE.REGULAR_SEASON && n < target) {
 			tl.push([Math.round(el), a, h, e.pid]);
 		}
 		pbp[gm.gid] = tl; n++;
+		if (process.env.RAW) raw[gm.gid] = caught.playByPlay;   // RAW=1: keep every event (for live box scores)
 		// lineups: starters from the saved box score, then follow the substitution events
 		const box = await idb.cache.games.get(gm.gid);
 		const on = box.teams.map((t) => new Set(t.players.filter((p) => p.gs).map((p) => p.pid))), tids = box.teams.map((t) => t.tid);
@@ -111,7 +112,7 @@ while (g.get("phase") === PHASE.REGULAR_SEASON && n < target) {
 	days++;
 }
 console.log(`simmed ${days} days, ${n} games with play-by-play`);
-if (process.env.PBP !== "0") { fs.writeFileSync(outFile.replace(/\.json$/, "-pbp.json"), JSON.stringify(pbp)); fs.writeFileSync(outFile.replace(/\.json$/, "-lineups.json"), JSON.stringify(lineups)); }
+if (process.env.PBP !== "0") { fs.writeFileSync(outFile.replace(/\.json$/, "-pbp.json"), JSON.stringify(pbp)); fs.writeFileSync(outFile.replace(/\.json$/, "-lineups.json"), JSON.stringify(lineups)); if (process.env.RAW) fs.writeFileSync(outFile.replace(/\.json$/, "-raw.json"), JSON.stringify(raw)); }
 await api.main.setLocal(["autoSave", true], cond);
 fs.writeFileSync(outFile, JSON.stringify(await exportLeague(bbgm, "SMP III prototype")));
 console.log(`wrote ${outFile} ${(fs.statSync(outFile).size / 1e6).toFixed(1)} MB`);
