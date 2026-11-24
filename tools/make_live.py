@@ -18,9 +18,35 @@ before, _ = build(N - 1)   # leaves league.json and lineups.json as they stood b
 assert not any(g['day'] == N for g in before['games']) and any(g['day'] == N for g in after['games'])
 raw = json.load(open(os.path.join(ROOT, f'data/day{N}-raw.json')))
 COLS = after['cols']; IDX = {k: i for i, k in enumerate(COLS)}
-ev = {}
+ev, pbp = {}, {}
+NAME = {p['pid']: p['name'] for p in after['players']}
+SHOT = dict(AtRim='at the rim', LowPost='in the post', MidRange='from mid-range', Tp='a three')
+def play(e):
+    """One line of play-by-play for an engine event, or None for events the feed skips."""
+    t, n = e['type'], (lambda k: NAME.get(e.get(k), 'A player'))
+    for made, word in (('fgAtRim', 'scores at the rim'), ('fgLowPost', 'scores in the post'), ('fgMidRange', 'hits from mid-range'), ('tp', 'makes a three')):
+        if t in (made, made + 'AndOne'):
+            return n('pid') + ' ' + word + (f" (assist {n('pidAst')})" if e.get('pidAst') is not None else '') + (', and is fouled' if t.endswith('AndOne') else '')
+    if t.startswith('miss') and t != 'missFt': return f"{n('pid')} misses {'a three' if t == 'missTp' else SHOT[t[4:]]}"
+    if t.startswith('blk'): return f"{n('pid')} blocks a shot {'from deep' if t == 'blkTp' else SHOT[t[3:]]}"
+    if t == 'ft': return f"{n('pid')} makes a free throw"
+    if t == 'missFt': return f"{n('pid')} misses a free throw"
+    if t == 'orb': return f"{n('pid')} grabs the offensive rebound"
+    if t == 'drb': return f"{n('pid')} rebounds"
+    if t == 'stl': return f"{n('pid')} steals it from {n('pidTov')}"
+    if t == 'tov': return f"{n('pid')} turns it over" + (' out of bounds' if e.get('outOfBounds') else '')
+    if t in ('pfFG', 'pfTP', 'pfBonus', 'pfAndOne'): return f"Foul on {n('pid')}; {n('pidShooting')} to the line" if t != 'pfAndOne' else None
+    if t == 'pfNonShooting': return f"Foul on {n('pid')}"
+    if t == 'foulOut': return f"{n('pid')} fouls out"
+    if t == 'sub': return ', '.join(NAME.get(x, 'A player') for x in e['pids']) + ' in for ' + ', '.join(NAME.get(x, 'A player') for x in e['pidsOff'])
+    if t == 'injury': return f"{n('pid')} is hurt and leaves the game"
+    if t == 'timeout': return 'Timeout'
+    if t == 'jumpBall': return f"{n('pid')} wins the opening tip"
+    return None
+PTS = lambda t: 1 if t == 'ft' else 3 if t.startswith('tp') else 2 if t.startswith('fg') and not t.startswith('fga') else 0
 for g in (x for x in after['games'] if x['day'] == N):
     period, clock, on, out = 1, 720.0, [set(), set()], []
+    feed, sc = [], [0, 0]   # play-by-play lines [game seconds, side (0 home, 1 away, -1 neither), text, away score, home score]
     acc = {}   # (pid, stat index) -> pending amount, for minutes and plus-minus, flushed every 20 game seconds
     last = 0.0
     def sec():
@@ -36,6 +62,12 @@ for g in (x for x in after['games'] if x['day'] == N):
         if 'clock' in e: clock = e['clock']
         s = sec()
         if s - last >= 20: flush(last); last = s
+        if e['type'] in ('period', 'overtime') and period > 1: feed.append([round((period - 1) * 720 - 0.1 if period <= 5 else 2880 + (period - 5) * 300 - 0.1, 1), -1, 'End of ' + (['the first quarter', 'the second quarter', 'the third quarter', 'regulation'][period - 2] if period <= 5 else 'overtime')])
+        line = play(e)
+        if line:
+            got = PTS(e['type'])
+            if got: sc[e['t']] += got
+            feed.append([s, e.get('t', -1), line] + ([sc[1], sc[0]] if got else []))
         if e['type'] == 'sub':
             on[e['t']] -= set(e['pidsOff']); on[e['t']] |= set(e['pids'])
         elif e['type'] == 'stat' and e.get('pid') is not None:
@@ -58,7 +90,9 @@ for g in (x for x in after['games'] if x['day'] == N):
                 want, got = r[i + 1], tot.get((r[0], i), 0)
                 assert abs(want - got) <= (0.06 if k == 'min' else 1e-6), (g['gid'], r[0], k, want, got)
     assert sum(amt for s, pid, k, amt in out if k == IDX['pts']) == g['home']['pts'] + g['away']['pts']
-    ev[g['gid']] = out
+    assert sc == [g['home']['pts'], g['away']['pts']], (g['gid'], sc)
+    feed.append([2880.0 + 300 * g['ot'], -1, 'Final'])
+    ev[g['gid']] = out; pbp[g['gid']] = feed
 p = os.path.join(ROOT, 'site/data/recaps.json'); R = json.load(open(p)); recap = R.pop(str(N), None)
 json.dump(R, open(p, 'w'), ensure_ascii=False, indent=1)
 old = os.path.join(ROOT, 'site/data/live.json')
@@ -67,6 +101,6 @@ if recap is None and os.path.exists(old):   # re-staging the same day: keep the 
         b = base64.b64decode(open(old).read()); x = json.loads(bytes(c ^ b'smp3'[i % 4] for i, c in enumerate(b)))
         if x.get('day') == N: recap = x.get('recap')
     except Exception: pass
-blob = json.dumps(dict(day=N, start=START, after=after, lineups=lineups, recap=recap, ev=ev), separators=(',', ':'), ensure_ascii=False).encode()
+blob = json.dumps(dict(day=N, start=START, after=after, lineups=lineups, recap=recap, ev=ev, pbp=pbp), separators=(',', ':'), ensure_ascii=False).encode()
 open(old, 'w').write(base64.b64encode(bytes(c ^ b'smp3'[i % 4] for i, c in enumerate(blob))).decode())
-print(f"day {N} staged for {START}: {len(ev)} games, {sum(len(v) for v in ev.values())} events, live.json {os.path.getsize(old) // 1024} KB, recap {'kept' if recap else 'MISSING'}; league.json is through Game {N - 1}")
+print(f"day {N} staged for {START}: {len(ev)} games, {sum(len(v) for v in ev.values())} events, {sum(len(v) for v in pbp.values())} plays, live.json {os.path.getsize(old) // 1024} KB, recap {'kept' if recap else 'MISSING'}; league.json is through Game {N - 1}")
