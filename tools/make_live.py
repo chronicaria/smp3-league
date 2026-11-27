@@ -44,7 +44,8 @@ def play(e):
     if t == 'jumpBall': return f"{n('pid')} wins the opening tip"
     return None
 PTS = lambda t: 1 if t == 'ft' else 3 if t.startswith('tp') else 2 if t.startswith('fg') and not t.startswith('fga') else 0
-for g in (x for x in after['games'] if x['day'] == N):
+os.makedirs(os.path.join(ROOT, 'site/data/pbp'), exist_ok=True)
+for g in after['games']:   # the day being staged goes into live.json; finished days get a play-by-play file each
     period, clock, on, out = 1, 720.0, [set(), set()], []
     feed, sc = [], [0, 0]   # play-by-play lines [game seconds, side (0 home, 1 away, -1 neither), text, away score, home score]
     acc = {}   # (pid, stat index) -> pending amount, for minutes and plus-minus, flushed every 20 game seconds
@@ -92,7 +93,8 @@ for g in (x for x in after['games'] if x['day'] == N):
     assert sum(amt for s, pid, k, amt in out if k == IDX['pts']) == g['home']['pts'] + g['away']['pts']
     assert sc == [g['home']['pts'], g['away']['pts']], (g['gid'], sc)
     feed.append([2880.0 + 300 * g['ot'], -1, 'Final'])
-    ev[g['gid']] = out; pbp[g['gid']] = feed
+    if g['day'] == N: ev[g['gid']] = out; pbp[g['gid']] = feed
+    else: json.dump(feed, open(os.path.join(ROOT, f"site/data/pbp/{g['gid']}.json"), 'w'), ensure_ascii=False, separators=(',', ':'))
 p = os.path.join(ROOT, 'site/data/recaps.json'); R = json.load(open(p)); recap = R.pop(str(N), None)
 json.dump(R, open(p, 'w'), ensure_ascii=False, indent=1)
 old = os.path.join(ROOT, 'site/data/live.json')
