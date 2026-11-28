@@ -20,15 +20,15 @@ raw = json.load(open(os.path.join(ROOT, f'data/day{N}-raw.json')))
 COLS = after['cols']; IDX = {k: i for i, k in enumerate(COLS)}
 ev, pbp = {}, {}
 NAME = {p['pid']: p['name'] for p in after['players']}
-SHOT = dict(AtRim='at the rim', LowPost='in the post', MidRange='from mid-range', Tp='a three')
+SHOT = dict(AtRim='at the rim', LowPost='in the post', MidRange='from mid-range', Tp='a three', PutBack='a putback')
 def play(e):
     """One line of play-by-play for an engine event, or None for events the feed skips."""
     t, n = e['type'], (lambda k: NAME.get(e.get(k), 'A player'))
-    for made, word in (('fgAtRim', 'scores at the rim'), ('fgLowPost', 'scores in the post'), ('fgMidRange', 'hits from mid-range'), ('tp', 'makes a three')):
+    for made, word in (('fgAtRim', 'scores at the rim'), ('fgLowPost', 'scores in the post'), ('fgMidRange', 'hits from mid-range'), ('tp', 'makes a three'), ('fgPutBack', 'scores on the putback')):
         if t in (made, made + 'AndOne'):
             return n('pid') + ' ' + word + (f" (assist {n('pidAst')})" if e.get('pidAst') is not None else '') + (', and is fouled' if t.endswith('AndOne') else '')
-    if t.startswith('miss') and t != 'missFt': return f"{n('pid')} misses {'a three' if t == 'missTp' else SHOT[t[4:]]}"
-    if t.startswith('blk'): return f"{n('pid')} blocks a shot {'from deep' if t == 'blkTp' else SHOT[t[3:]]}"
+    if t.startswith('miss') and t != 'missFt': return f"{n('pid')} misses {SHOT.get(t[4:], 'a shot')}"
+    if t.startswith('blk'): return f"{n('pid')} blocks a shot {'from deep' if t == 'blkTp' else SHOT.get(t[3:], '')}".rstrip()
     if t == 'ft': return f"{n('pid')} makes a free throw"
     if t == 'missFt': return f"{n('pid')} misses a free throw"
     if t == 'orb': return f"{n('pid')} grabs the offensive rebound"
@@ -94,7 +94,8 @@ for g in after['games']:   # the day being staged goes into live.json; finished 
     assert sc == [g['home']['pts'], g['away']['pts']], (g['gid'], sc)
     feed.append([2880.0 + 300 * g['ot'], -1, 'Final'])
     if g['day'] == N: ev[g['gid']] = out; pbp[g['gid']] = feed
-    else: json.dump(feed, open(os.path.join(ROOT, f"site/data/pbp/{g['gid']}.json"), 'w'), ensure_ascii=False, separators=(',', ':'))
+    elif g['day'] < int(os.environ.get('PBP_BEFORE', N)):   # PBP_BEFORE (set by make_slate.py): no readable file for a day that is staged but not yet played
+        json.dump(feed, open(os.path.join(ROOT, f"site/data/pbp/{g['gid']}.json"), 'w'), ensure_ascii=False, separators=(',', ':'))
 p = os.path.join(ROOT, 'site/data/recaps.json'); R = json.load(open(p)); recap = R.pop(str(N), None)
 json.dump(R, open(p, 'w'), ensure_ascii=False, indent=1)
 old = os.path.join(ROOT, 'site/data/live.json')
